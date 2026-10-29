@@ -1,0 +1,82 @@
+// Paste into https://dbdiagram.io to view the diagram.
+// Mirrors server/prisma/schema.prisma
+
+Enum video_status {
+  processing
+  ready
+  failed
+}
+
+Enum message_status {
+  streaming
+  complete
+  failed
+}
+
+Enum message_role {
+  user
+  assistant
+}
+
+Table users {
+  id uuid [pk, default: `gen_random_uuid()`]
+  created_at timestamp [not null, default: `now()`]
+  Note: 'Anonymous visitors, identified by a cookie'
+}
+
+Table videos {
+  id uuid [pk, default: `gen_random_uuid()`]
+  youtube_id text [not null, unique]
+  title text [not null]
+  channel text
+  thumbnail_url text [not null]
+  status video_status [not null, default: 'processing']
+  error_message text
+  chunk_count int
+  created_at timestamp [not null, default: `now()`]
+  Note: 'Shared entity: ingested and embedded once, linked to many users'
+}
+
+Table user_videos {
+  user_id uuid [not null, ref: > users.id]
+  video_id uuid [not null, ref: > videos.id]
+  added_at timestamp [not null, default: `now()`]
+
+  indexes {
+    (user_id, video_id) [pk]
+  }
+  Note: "A user's library"
+}
+
+Table conversations {
+  id uuid [pk, default: `gen_random_uuid()`]
+  user_id uuid [not null, ref: > users.id]
+  title text [not null, default: 'New chat']
+  created_at timestamp [not null, default: `now()`]
+  updated_at timestamp [not null]
+}
+
+Table conversation_videos {
+  conversation_id uuid [not null, ref: > conversations.id]
+  video_id uuid [not null, ref: > videos.id]
+
+  indexes {
+    (conversation_id, video_id) [pk]
+  }
+  Note: 'Videos a conversation can search (max 5, enforced in the API)'
+}
+
+Table messages {
+  id uuid [pk, default: `gen_random_uuid()`]
+  conversation_id uuid [not null, ref: > conversations.id]
+  role message_role [not null]
+  content text [not null]
+  status message_status [not null, default: 'complete']
+  model text [note: 'LLM that produced an assistant message']
+  sources jsonb [note: 'Chunks the answer was based on (citations, evals)']
+  created_at timestamp [not null, default: `now()`]
+
+  indexes {
+    (conversation_id, created_at)
+  }
+}

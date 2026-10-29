@@ -86,13 +86,27 @@ enum MessageRole {
   @@map("message_role")
 }
 
+enum MessageStatus {
+  streaming
+  complete
+  failed
+
+  @@map("message_status")
+}
+
 model Message {
-  id             String       @id @default(uuid()) @db.Uuid
-  conversationId String       @map("conversation_id") @db.Uuid
+  id             String        @id @default(uuid()) @db.Uuid
+  conversationId String        @map("conversation_id") @db.Uuid
   role           MessageRole
   content        String
-  createdAt      DateTime     @default(now()) @map("created_at")
-  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  // 'streaming' while tokens are arriving, so a dropped connection leaves a visible partial answer.
+  status         MessageStatus @default(complete)
+  // Which LLM produced an assistant message (null for user messages).
+  model          String?
+  // Chunks the answer was based on (video id, timestamp, text snippet). Used for citations and evals.
+  sources        Json?
+  createdAt      DateTime      @default(now()) @map("created_at")
+  conversation   Conversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 
   @@index([conversationId, createdAt])
   @@map("messages")
