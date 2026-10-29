@@ -9,7 +9,7 @@ Paste a URL, build a personal library, select up to 5 videos, and hold a continu
 
 - **Backend:** Node.js, Express, TypeScript, LangChain
 - **Vector store:** Qdrant
-- **Database:** PostgreSQL with Drizzle ORM
+- **Database:** PostgreSQL with Prisma ORM
 - **LLM and embeddings:** Google Gemini
 - **Frontend:** React, Vite, Tailwind CSS
 
@@ -21,7 +21,7 @@ Requirements: Node.js 22+, Docker.
 cp .env.example .env        # then fill in GOOGLE_API_KEY
 docker compose up -d        # starts Qdrant and PostgreSQL
 npm install
-npm run db:migrate --workspace server
+npm run db:migrate --workspace server  # creates tables and generates the Prisma client
 npm run dev:server
 ```
 

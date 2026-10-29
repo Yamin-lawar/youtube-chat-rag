@@ -1,8 +1,8 @@
-import { drizzle } from 'drizzle-orm/node-postgres';
-import pg from 'pg';
+import { PrismaPg } from '@prisma/adapter-pg';
 import { config } from '../config.js';
-import * as schema from './schema.js';
+import { PrismaClient } from '../generated/prisma/client.js';
 
-export const pool = new pg.Pool({ connectionString: config.DATABASE_URL });
+// Prisma 7 talks to Postgres through a driver adapter.
+const adapter = new PrismaPg({ connectionString: config.DATABASE_URL });
 
-export const db = drizzle(pool, { schema });
+export const prisma = new PrismaClient({ adapter });

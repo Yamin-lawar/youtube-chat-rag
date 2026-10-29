@@ -2,7 +2,7 @@
 
 Goal: a portfolio-grade app to chat with up to 5 YouTube videos, built to learn and compare RAG techniques with evals.
 
-Stack: TypeScript + Node (Express), LangChain JS, Qdrant (Docker), Postgres + Drizzle (Docker), Gemini (free tier: LLM + embeddings), React + Vite + Tailwind + shadcn/ui + Framer Motion + TanStack Query.
+Stack: TypeScript + Node (Express), LangChain JS, Qdrant (Docker), Postgres + Prisma (Docker), Gemini (free tier: LLM + embeddings), React + Vite + Tailwind + shadcn/ui + Framer Motion + TanStack Query.
 
 ## How we work
 
@@ -21,7 +21,7 @@ Gate rule: each gate = working, tested, committed and pushed to GitHub with a sh
 Setup (Claude)
 
 - Repo scaffold: `server/`, `client/`, `.gitignore`, `.env.example`, README skeleton
-- Postgres added to docker-compose; Drizzle schema: users, videos, user_videos, conversations, conversation_videos, messages
+- Postgres added to docker-compose; Prisma schema: users, videos, user_videos, conversations, conversation_videos, messages
 - Anonymous session (cookie with user id)
 
 RAG baseline, one block at a time (stop + explain + Yamin inspects output after each)
