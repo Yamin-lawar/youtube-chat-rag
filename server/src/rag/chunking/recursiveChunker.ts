@@ -40,7 +40,6 @@ export class RecursiveChunker implements Chunker {
     const chunks: Chunk[] = [];
     let searchFrom = 0;
 
-
     for (const [index, text] of pieces.entries()) {
       // Logic to get exact start and end time of chunk text into video
       const start = fullText.indexOf(text, searchFrom);
@@ -62,7 +61,7 @@ export class RecursiveChunker implements Chunker {
         endMs: last.startMs + last.durationMs,
       });
     }
-    console.log(chunks, "chunks")
+    console.log(chunks, 'chunks');
     return chunks;
   }
 }
