@@ -40,8 +40,9 @@ export class RecursiveChunker implements Chunker {
     const chunks: Chunk[] = [];
     let searchFrom = 0;
 
+
     for (const [index, text] of pieces.entries()) {
-      // Chunks come back in order and overlap, so each one starts after the previous start.
+      // Logic to get exact start and end time of chunk text into video
       const start = fullText.indexOf(text, searchFrom);
       if (start === -1) {
         throw new Error(`Chunk ${index} was not found in the transcript text`);
@@ -61,7 +62,7 @@ export class RecursiveChunker implements Chunker {
         endMs: last.startMs + last.durationMs,
       });
     }
-
+    console.log(chunks, "chunks")
     return chunks;
   }
 }
