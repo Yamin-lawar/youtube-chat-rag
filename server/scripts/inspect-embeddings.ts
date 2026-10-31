@@ -2,7 +2,7 @@
 //   npx tsx --env-file=../.env scripts/inspect-embeddings.ts [youtube-id]
 import { RecursiveChunker } from '../src/rag/chunking/recursiveChunker.js';
 import { GeminiEmbedder } from '../src/rag/embeddings/embedder.js';
-import { cosineSimilarity } from '../src/rag/similarity.js';
+import { cosineSimilarity, dotProduct, euclideanDistance } from '../src/rag/similarity.js';
 import { YoutubeTranscriptProvider } from '../src/rag/transcript/youtubeProvider.js';
 
 const youtubeId = process.argv[2] ?? 'JljlsOJmlCA';
@@ -56,17 +56,33 @@ const questions = [
   'What is the weather like today?',
 ];
 
-console.log('\n=== 3. Questions vs chunks: top 3 matches ===');
+const TOP_K = 3;
+
+// Each metric scores a question vector against a chunk vector.
+// Cosine and dot product: higher means closer. Euclidean distance: LOWER means closer.
+const metrics = [
+  { name: 'Cosine similarity', score: cosineSimilarity, higherIsBetter: true },
+  { name: 'Dot product', score: dotProduct, higherIsBetter: true },
+  { name: 'Euclidean distance', score: euclideanDistance, higherIsBetter: false },
+];
+
+console.log(`\n=== 3. Questions vs chunks: top ${TOP_K} matches per metric ===`);
 for (const question of questions) {
   const queryVector = await embedder.embedQuery(question);
-  const ranked = vectors
-    .map((vector, i) => ({ chunk: chunks[i]!, score: cosineSimilarity(queryVector, vector) }))
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 3);
-
   console.log(`\nQ: ${question}`);
-  for (const { chunk, score } of ranked) {
-    const preview = chunk.text.slice(0, 110).replace(/\s+/g, ' ');
-    console.log(`  ${score.toFixed(3)}  [${formatTime(chunk.startMs)}]  ${preview}...`);
+
+  for (const metric of metrics) {
+    const ranked = vectors
+      .map((vector, i) => ({ chunk: chunks[i]!, score: metric.score(queryVector, vector) }))
+      .sort((a, b) => (metric.higherIsBetter ? b.score - a.score : a.score - b.score))
+      .slice(0, TOP_K);
+
+    console.log(`\n  ${metric.name}${metric.higherIsBetter ? '' : ' (lower is closer)'}`);
+    for (const { chunk, score } of ranked) {
+      const preview = chunk.text.slice(0, 90).replace(/\s+/g, ' ');
+      console.log(
+        `    #${String(chunk.index).padEnd(2)} ${score.toFixed(3)}  [${formatTime(chunk.startMs)}]  ${preview}...`,
+      );
+    }
   }
 }
