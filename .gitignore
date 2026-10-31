@@ -25,3 +25,6 @@ npm-debug.log*
 
 # Generated Prisma client
 server/src/generated/
+
+# Local caches (embeddings, etc.)
+server/.cache/

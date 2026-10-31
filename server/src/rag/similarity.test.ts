@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cosineSimilarity } from './similarity.js';
+import { cosineSimilarity, dotProduct, euclideanDistance, vectorLength } from './similarity.js';
 
 describe('cosineSimilarity', () => {
   it('is 1 for vectors pointing the same way, whatever their length', () => {
@@ -20,5 +20,31 @@ describe('cosineSimilarity', () => {
 
   it('rejects vectors of different lengths', () => {
     expect(() => cosineSimilarity([1, 2], [1, 2, 3])).toThrow();
+  });
+});
+
+describe('dotProduct', () => {
+  it('multiplies matching numbers and adds them', () => {
+    expect(dotProduct([1, 2], [2, 4])).toBe(10);
+  });
+
+  it('grows with vector length even when the direction is the same', () => {
+    expect(dotProduct([1, 0], [3, 0])).toBeGreaterThan(dotProduct([1, 0], [1, 0]));
+  });
+});
+
+describe('euclideanDistance', () => {
+  it('is 0 for identical vectors', () => {
+    expect(euclideanDistance([1, 2], [1, 2])).toBe(0);
+  });
+
+  it('measures straight-line distance', () => {
+    expect(euclideanDistance([0, 0], [3, 4])).toBe(5);
+  });
+});
+
+describe('vectorLength', () => {
+  it('is the straight-line length of the vector', () => {
+    expect(vectorLength([3, 4])).toBe(5);
   });
 });
