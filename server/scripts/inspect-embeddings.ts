@@ -5,7 +5,7 @@ import { GeminiEmbedder } from '../src/rag/embeddings/embedder.js';
 import { cosineSimilarity, dotProduct, euclideanDistance } from '../src/rag/similarity.js';
 import { YoutubeTranscriptProvider } from '../src/rag/transcript/youtubeProvider.js';
 
-const youtubeId = process.argv[2] ?? 'JljlsOJmlCA';
+const youtubeId = process.argv[2] ?? '85CPkmVriec';
 
 function formatTime(ms: number): string {
   const totalSeconds = Math.floor(ms / 1000);
@@ -51,9 +51,8 @@ console.log(
 
 // 3. Questions against all chunks (a preview of retrieval)
 const questions = [
-  'Does he recommend Supabase?',
-  'Why not send the whole transcript to the LLM every time?',
-  'What is the weather like today?',
+  'How hipnotise works?',
+  'Can subconscious mind be reprogrammed?',
 ];
 
 const TOP_K = 3;
