@@ -50,10 +50,7 @@ console.log(
 );
 
 // 3. Questions against all chunks (a preview of retrieval)
-const questions = [
-  'How hipnotise works?',
-  'Can subconscious mind be reprogrammed?',
-];
+const questions = ['How hipnotise works?', 'Can subconscious mind be reprogrammed?'];
 
 const TOP_K = 3;
 
