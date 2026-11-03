@@ -19,6 +19,11 @@ export interface ChunkPayload {
   endMs: number;
 }
 
+/** A stored chunk returned by a search, with its cosine similarity to the question. */
+export interface ScoredChunk extends ChunkPayload {
+  score: number;
+}
+
 /**
  * Qdrant point ids must be UUIDs or integers. Deriving the UUID from the video and chunk
  * number means ingesting the same video twice overwrites its points instead of duplicating them.
@@ -87,6 +92,24 @@ export class QdrantChunkStore {
         points: points.slice(start, start + UPSERT_BATCH_SIZE),
       });
     }
+  }
+
+  /**
+   * Finds the chunks closest to a question vector, best first. Only the given videos
+   * are searched, which is how a chat limits its answers to the videos picked for it.
+   */
+  async search(vector: number[], youtubeIds: string[], limit: number): Promise<ScoredChunk[]> {
+    const { points } = await this.client.query(this.collectionName, {
+      query: vector,
+      using: DENSE_VECTOR_NAME,
+      limit,
+      with_payload: true,
+      filter: { must: [{ key: 'youtubeId', match: { any: youtubeIds } }] },
+    });
+    return points.map((point) => ({
+      ...(point.payload as unknown as ChunkPayload),
+      score: point.score,
+    }));
   }
 
   async deleteVideo(youtubeId: string): Promise<void> {
