@@ -9,6 +9,8 @@ const envSchema = z.object({
   QDRANT_URL: z.string().min(1),
   // Optional for now; required once we reach the embeddings step.
   GOOGLE_API_KEY: z.string().optional(),
+  // Optional answer-generation fallback, used when Gemini is overloaded. Free key: console.groq.com
+  GROQ_API_KEY: z.string().optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);
