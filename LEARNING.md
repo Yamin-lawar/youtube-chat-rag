@@ -58,6 +58,20 @@ Test video for most entries: a 87-minute RAG tutorial (about 11,000 words, auto-
 
 **Conclusion:** with this model the metric is not where retrieval quality is won. I use cosine, the standard choice for this model. Quality is more likely to come from chunking, hybrid search, query rewriting and reranking. Near-ties among relevant chunks are the real weakness.
 
+## 5. Retrieval (filtered Qdrant search plus a relative cutoff)
+
+**What it does:** embeds the question (as `RETRIEVAL_QUERY`), asks Qdrant for the 8 nearest chunks of the selected videos only, then drops chunks scoring more than 0.08 below the best one.
+
+**What I found** (test video: an interview about AI data centers and power, 19 chunks)
+
+- A specific question ("how much power do the data centers need") scored 0.71 down to 0.62. The top chunks were the power-generation passages, and 3 of 8 were dropped.
+- A vague question ("what is this video about") scored 0.60 to 0.63 with no standout, so all 8 were kept in an order that means little.
+- The video filter (`youtubeId` in a list) is what limits a chat to its selected videos. It uses the payload index created at ingest.
+
+**Limitation:** a relative cutoff only helps when one part of the video clearly matches. Broad questions match nothing in particular, so retrieval guesses. The 0.08 margin is a guess and is not tuned.
+
+**To try:** tune the margin and top-k with evals, query rewriting and decomposition for vague or multi-part questions, hybrid search, and a reranker.
+
 ## Open questions
 
 - Does 768 dimensions lose quality compared with 3072?
