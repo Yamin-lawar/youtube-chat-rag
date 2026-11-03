@@ -30,11 +30,3 @@ export function buildUserPrompt(question: string, chunks: ScoredChunk[]): string
 
   return `Transcript excerpts:\n\n${excerpts}\n\nQuestion: ${question}`;
 }
-
-/**
- * Some models (gpt-oss) write citations as 【1】 or 【1†L1-L4】 whatever the prompt says.
- * This turns them into plain [1] so the UI only has to understand one format.
- */
-export function normalizeCitations(text: string): string {
-  return text.replace(/【(\d+)[^】]*】/g, '[$1]');
-}

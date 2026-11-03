@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { ScoredChunk } from '../vectorstore/qdrantChunkStore.js';
-import { buildUserPrompt, formatTimestamp, normalizeCitations } from './prompt.js';
+import { buildUserPrompt, formatTimestamp } from './prompt.js';
 
 describe('formatTimestamp', () => {
   it('formats minutes and seconds', () => {
@@ -24,15 +24,5 @@ describe('buildUserPrompt', () => {
     expect(prompt).toContain('[1] (video aaa, at 0:00)\nfirst text');
     expect(prompt).toContain('[2] (video bbb, at 1:30)\nsecond text');
     expect(prompt.endsWith('Question: what happened?')).toBe(true);
-  });
-});
-
-describe('normalizeCitations', () => {
-  it('turns full-width and line-numbered citations into plain [n]', () => {
-    expect(normalizeCitations('a【1】 b【3†L9-L13】.')).toBe('a[1] b[3].');
-  });
-
-  it('leaves plain citations alone', () => {
-    expect(normalizeCitations('a [1][2] b')).toBe('a [1][2] b');
   });
 });

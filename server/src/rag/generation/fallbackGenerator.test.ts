@@ -1,21 +1,28 @@
 import { describe, expect, it } from 'vitest';
 import { FallbackGenerator } from './fallbackGenerator.js';
-import type { Answer, Generator } from './types.js';
+import type { Answer, AnswerStream, Generator } from './types.js';
+
+async function* tokensOf(text: string): AsyncGenerator<string> {
+  yield text;
+}
 
 function working(name: string): Generator {
   return {
     name,
     generate: async (): Promise<Answer> => ({ text: `from ${name}`, sources: [], model: name }),
+    stream: async (): Promise<AnswerStream> => ({
+      sources: [],
+      model: name,
+      tokens: tokensOf(`from ${name}`),
+    }),
   };
 }
 
 function broken(name: string): Generator {
-  return {
-    name,
-    generate: async () => {
-      throw new Error('503 high demand');
-    },
+  const fail = async (): Promise<never> => {
+    throw new Error('503 high demand');
   };
+  return { name, generate: fail, stream: fail };
 }
 
 describe('FallbackGenerator', () => {
@@ -27,6 +34,11 @@ describe('FallbackGenerator', () => {
   it('falls back to the next generator when one fails', async () => {
     const answer = await new FallbackGenerator([broken('a'), working('b')]).generate('q', []);
     expect(answer.model).toBe('b');
+  });
+
+  it('falls back when starting a stream fails', async () => {
+    const stream = await new FallbackGenerator([broken('a'), working('b')]).stream('q', []);
+    expect(stream.model).toBe('b');
   });
 
   it('reports every failure when all generators fail', async () => {
