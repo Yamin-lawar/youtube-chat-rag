@@ -72,6 +72,9 @@ model Conversation {
 model ConversationVideo {
   conversationId String       @map("conversation_id") @db.Uuid
   videoId        String       @map("video_id") @db.Uuid
+  // Turned off mid-chat means "stop searching this video". The row stays, so earlier answers
+  // can still show its title and the video can be turned back on.
+  active         Boolean      @default(true)
   conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   video          Video        @relation(fields: [videoId], references: [id], onDelete: Cascade)
 

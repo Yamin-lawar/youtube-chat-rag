@@ -3,10 +3,16 @@ import { ArrowDown, MessageSquareOff } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { askQuestion } from '../api/chatStream';
-import { CONVERSATIONS_KEY, conversationKey, useConversation } from '../api/conversations';
+import {
+  CONVERSATIONS_KEY,
+  conversationKey,
+  useConversation,
+  useSetVideoActive,
+} from '../api/conversations';
 import type { ConversationDetail, Source } from '../api/types';
 import { Composer } from '../components/Composer';
 import { AssistantMessage, UserMessage } from '../components/MessageBubble';
+import { VideoStrip } from '../components/VideoStrip';
 import { useStickToBottom, useTypewriter } from '../hooks';
 
 /** An answer that is being written right now, before it has been reloaded from the server. */
@@ -122,6 +128,7 @@ interface ChatThreadProps {
 
 function ChatThread({ conversation, live, sendError, onSend, onCaughtUp }: ChatThreadProps) {
   const { scrollRef, contentRef, onScroll, scrollToBottom, showJump } = useStickToBottom();
+  const setActive = useSetVideoActive(conversation.id);
 
   const videoTitles = useMemo(
     () => new Map(conversation.videos.map((video) => [video.youtubeId, video.title])),
@@ -148,18 +155,13 @@ function ChatThread({ conversation, live, sendError, onSend, onCaughtUp }: ChatT
     <div className="flex h-full flex-col">
       <header className="flex items-center gap-4 border-b border-line px-5 py-3.5 md:px-8">
         <h1 className="min-w-0 flex-1 truncate text-[15px] font-semibold">{conversation.title}</h1>
-        <div className="flex -space-x-2.5">
-          {conversation.videos.map((video) => (
-            <img
-              key={video.id}
-              src={video.thumbnailUrl}
-              alt={video.title}
-              title={video.title}
-              className="h-8 w-14 rounded-md border-2 border-canvas object-cover"
-            />
-          ))}
-        </div>
       </header>
+
+      <VideoStrip
+        videos={conversation.videos}
+        error={setActive.error?.message ?? null}
+        onToggle={(video) => setActive.mutate({ videoId: video.id, active: !video.active })}
+      />
 
       <div className="relative min-h-0 flex-1">
         <div ref={scrollRef} onScroll={onScroll} className="h-full overflow-y-auto">
@@ -264,7 +266,7 @@ function EmptyChat({
             src={video.thumbnailUrl}
             alt=""
             style={{ transform: `rotate(${(i - (videos.length - 1) / 2) * 6}deg)` }}
-            className="h-20 w-36 rounded-xl border-2 border-canvas object-cover shadow-2xl"
+            className="h-24 w-44 rounded-xl border-2 border-canvas object-cover shadow-2xl"
           />
         ))}
       </div>

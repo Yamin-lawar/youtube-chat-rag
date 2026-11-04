@@ -20,6 +20,8 @@ const createSchema = z.object({
     .max(MAX_VIDEOS_PER_CONVERSATION, `Pick at most ${MAX_VIDEOS_PER_CONVERSATION} videos`),
 });
 const idParamSchema = z.object({ id: z.uuid() });
+const videoParamSchema = z.object({ id: z.uuid(), videoId: z.uuid() });
+const toggleVideoSchema = z.object({ active: z.boolean() });
 const messageSchema = z.object({ content: z.string().trim().min(1).max(MAX_QUESTION_LENGTH) });
 
 const withVideos = {
@@ -39,8 +41,9 @@ function toConversationJson(conversation: NonNullable<ConversationWithVideos>) {
     title: conversation.title,
     createdAt: conversation.createdAt,
     updatedAt: conversation.updatedAt,
-    videos: conversation.videos.map(({ video }) => ({
+    videos: conversation.videos.map(({ video, active }) => ({
       id: video.id,
+      active,
       youtubeId: video.youtubeId,
       title: video.title,
       thumbnailUrl: video.thumbnailUrl,
@@ -118,6 +121,35 @@ conversationsRouter.delete('/:id', async (req, res) => {
   res.status(204).end();
 });
 
+// Switch a video of the chat on or off. Off videos stay listed but are no longer searched.
+conversationsRouter.patch('/:id/videos/:videoId', async (req, res) => {
+  const params = videoParamSchema.safeParse(req.params);
+  const body = toggleVideoSchema.safeParse(req.body);
+  if (!params.success || !body.success) return res.status(400).json({ error: 'Invalid request' });
+
+  const conversation = await findConversation(params.data.id, req.userId);
+  if (!conversation) return res.status(404).json({ error: 'Conversation not found' });
+
+  const link = conversation.videos.find(({ video }) => video.id === params.data.videoId);
+  if (!link) return res.status(404).json({ error: 'That video is not in this chat' });
+
+  // A chat with nothing to search could not answer anything.
+  const activeCount = conversation.videos.filter(({ active }) => active).length;
+  if (!body.data.active && link.active && activeCount === 1) {
+    return res.status(409).json({ error: 'Keep at least one video selected' });
+  }
+
+  await prisma.conversationVideo.update({
+    where: {
+      conversationId_videoId: { conversationId: conversation.id, videoId: params.data.videoId },
+    },
+    data: { active: body.data.active },
+  });
+
+  const updated = await findConversation(conversation.id, req.userId);
+  res.json(toConversationJson(updated!));
+});
+
 // Ask a question. The answer comes back as a stream of Server-Sent Events:
 //   start -> sources -> token ... -> done      (or `error`)
 conversationsRouter.post('/:id/messages', async (req, res) => {
@@ -131,7 +163,10 @@ conversationsRouter.post('/:id/messages', async (req, res) => {
   if (!conversation) return res.status(404).json({ error: 'Conversation not found' });
 
   const question = body.data.content;
-  const youtubeIds = conversation.videos.map(({ video }) => video.youtubeId);
+  // Only the videos that are switched on are searched.
+  const youtubeIds = conversation.videos
+    .filter(({ active }) => active)
+    .map(({ video }) => video.youtubeId);
 
   // Both rows are written before streaming starts, so a dropped connection still leaves
   // the question and a (possibly partial) answer in the history.

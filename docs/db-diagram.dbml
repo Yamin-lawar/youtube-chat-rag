@@ -59,6 +59,7 @@ Table conversations {
 Table conversation_videos {
   conversation_id uuid [not null, ref: > conversations.id]
   video_id uuid [not null, ref: > videos.id]
+  active boolean [not null, default: true, note: 'false = switched off mid-chat, no longer searched']
 
   indexes {
     (conversation_id, video_id) [pk]

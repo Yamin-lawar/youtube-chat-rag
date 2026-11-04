@@ -20,6 +20,8 @@ export interface ConversationVideo {
   youtubeId: string;
   title: string;
   thumbnailUrl: string;
+  /** False when the video was switched off mid-chat and is no longer searched. */
+  active: boolean;
 }
 
 export interface Conversation {

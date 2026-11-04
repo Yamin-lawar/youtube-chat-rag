@@ -41,6 +41,36 @@ export function useCreateConversation() {
   });
 }
 
+/** Switches a video of a chat on or off. The change shows immediately and rolls back on failure. */
+export function useSetVideoActive(conversationId: string) {
+  const queryClient = useQueryClient();
+  const key = conversationKey(conversationId);
+
+  return useMutation({
+    mutationFn: ({ videoId, active }: { videoId: string; active: boolean }) =>
+      request<Conversation>(`/conversations/${conversationId}/videos/${videoId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ active }),
+      }),
+    onMutate: async ({ videoId, active }) => {
+      await queryClient.cancelQueries({ queryKey: key });
+      const before = queryClient.getQueryData<ConversationDetail>(key);
+      queryClient.setQueryData<ConversationDetail>(
+        key,
+        (old) =>
+          old && {
+            ...old,
+            videos: old.videos.map((v) => (v.id === videoId ? { ...v, active } : v)),
+          },
+      );
+      return { before };
+    },
+    onError: (_error, _variables, context) => {
+      if (context?.before) queryClient.setQueryData(key, context.before);
+    },
+  });
+}
+
 export function useDeleteConversation() {
   const queryClient = useQueryClient();
   return useMutation({
