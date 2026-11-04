@@ -14,7 +14,8 @@ services:
       POSTGRES_PASSWORD: ytchat
       POSTGRES_DB: ytchat
     ports:
-      - '5432:5432'
+      # The host port can be changed in .env (POSTGRES_PORT) if another Postgres already uses 5432.
+      - '${POSTGRES_PORT:-5432}:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
