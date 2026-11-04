@@ -5,6 +5,8 @@ import { normalizeCitationStream } from './citations.js';
 import { SYSTEM_PROMPT, buildUserPrompt } from './prompt.js';
 import type { Answer, AnswerStream, Generator, Source } from './types.js';
 
+const SNIPPET_LENGTH = 220;
+
 export const NOT_FOUND_ANSWER = 'I could not find anything about that in the selected videos.';
 
 /**
@@ -58,6 +60,7 @@ function toSources(chunks: ScoredChunk[]): Source[] {
     youtubeId: chunk.youtubeId,
     startMs: chunk.startMs,
     endMs: chunk.endMs,
+    snippet: chunk.text.slice(0, SNIPPET_LENGTH),
   }));
 }
 

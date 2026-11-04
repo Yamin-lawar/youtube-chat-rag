@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../db/client.js';
 import { fetchVideoMetadata, parseYoutubeId } from '../lib/youtube.js';
+import { queueIngestion } from '../services/ingestion.js';
 
 export const videosRouter = Router();
 
@@ -56,6 +57,18 @@ videosRouter.post('/', async (req, res) => {
     update: {},
     create: { userId: req.userId, videoId: video.id },
   });
+
+  // A new video, or one whose last attempt failed, is (re)ingested in the background.
+  // The client watches `status` to know when the video is ready to chat with.
+  if (video.status !== 'ready') {
+    if (video.status === 'failed') {
+      video = await prisma.video.update({
+        where: { id: video.id },
+        data: { status: 'processing', errorMessage: null },
+      });
+    }
+    queueIngestion(video.youtubeId);
+  }
 
   res.status(201).json(video);
 });

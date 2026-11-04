@@ -6,6 +6,8 @@ export interface Source {
   youtubeId: string;
   startMs: number;
   endMs: number;
+  /** The start of the passage, so the UI can show what was cited without another lookup. */
+  snippet: string;
 }
 
 export interface Answer {

@@ -2,6 +2,7 @@ import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express, { type NextFunction, type Request, type Response } from 'express';
 import { config } from './config.js';
+import { conversationsRouter } from './routes/conversations.js';
 import { session } from './middleware/session.js';
 import { videosRouter } from './routes/videos.js';
 
@@ -24,6 +25,7 @@ export function createApp() {
   });
 
   app.use('/api/videos', videosRouter);
+  app.use('/api/conversations', conversationsRouter);
 
   // Last-resort error handler so unexpected failures return JSON, not a stack trace.
   app.use((error: Error, _req: Request, res: Response, _next: NextFunction) => {
