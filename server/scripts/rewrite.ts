@@ -8,7 +8,6 @@
 //       "u:" for a user message or "a:" for an assistant message
 import { config } from '../src/config.js';
 import { createRewriter } from '../src/rag/generation/providers.js';
-import { buildRewritePrompt } from '../src/rag/rewriting/prompt.js';
 import type { ChatTurn } from '../src/rag/rewriting/types.js';
 
 const rewriter = createRewriter({
@@ -73,9 +72,7 @@ const cases: Case[] = question ? [{ question, history: parseHistory(historyParts
 
 for (const { question: q, history } of cases) {
   console.log('='.repeat(70));
-  console.log('PROMPT SENT TO THE REWRITER');
-  console.log(buildRewritePrompt(q, history));
-
+  // The rewriter prints the prompt it sends and the result by itself.
   const startedAt = Date.now();
   const rewritten = await rewriter.rewrite(q, history);
 

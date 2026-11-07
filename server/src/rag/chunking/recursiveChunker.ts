@@ -61,7 +61,6 @@ export class RecursiveChunker implements Chunker {
         endMs: last.startMs + last.durationMs,
       });
     }
-    console.log(chunks, 'chunks');
     return chunks;
   }
 }

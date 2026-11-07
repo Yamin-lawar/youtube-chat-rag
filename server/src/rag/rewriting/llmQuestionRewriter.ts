@@ -39,22 +39,39 @@ export function cleanRewrite(raw: string): string {
   return cleaned.length > MAX_REWRITE_CHARS ? '' : cleaned;
 }
 
+export interface RewriterOptions {
+  timeoutMs?: number;
+  /** Where the prompt and the result are printed, so every rewrite can be inspected. */
+  log?: (message: string) => void;
+}
+
 /**
  * Rewrites a follow-up into a standalone question with an LLM. Models are tried in order,
  * and if none of them works the original question is used: a failed rewrite should make
  * search a little worse, never make the chat fail.
  */
 export class LlmQuestionRewriter implements QuestionRewriter {
+  private readonly timeoutMs: number;
+  private readonly log: (message: string) => void;
+
   constructor(
     private readonly models: NamedModel[],
-    private readonly timeoutMs = DEFAULT_TIMEOUT_MS,
-  ) {}
+    { timeoutMs = DEFAULT_TIMEOUT_MS, log = console.log }: RewriterOptions = {},
+  ) {
+    this.timeoutMs = timeoutMs;
+    this.log = log;
+  }
 
   async rewrite(question: string, history: ChatTurn[]): Promise<string> {
     // Nothing to resolve in the first message, so we skip the extra model call.
-    if (history.length === 0) return question;
+    if (history.length === 0) {
+      this.log('[rewrite] first message, nothing to rewrite');
+      return question;
+    }
 
     const prompt = buildRewritePrompt(question, history);
+    this.log(`[rewrite] prompt sent to the model:\n${prompt}\n`);
+    const startedAt = Date.now();
 
     for (const { name, model } of this.models) {
       try {
@@ -66,7 +83,12 @@ export class LlmQuestionRewriter implements QuestionRewriter {
           { signal: AbortSignal.timeout(this.timeoutMs) },
         );
         const rewritten = cleanRewrite(contentToText(reply.content));
-        if (rewritten) return rewritten;
+        if (rewritten) {
+          this.log(
+            `[rewrite] ${name} (${Date.now() - startedAt} ms): "${question}" -> "${rewritten}"`,
+          );
+          return rewritten;
+        }
         console.warn(`Rewriting with ${name} gave an unusable reply`);
       } catch (error) {
         console.warn(
