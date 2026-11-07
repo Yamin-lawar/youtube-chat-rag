@@ -1,0 +1,326 @@
+{
+  "questions": [
+    {
+      "id": "q01",
+      "type": "fact",
+      "question": "What is a neo cloud?",
+      "youtubeIds": ["DRDI0KApHZw"],
+      "evidence": [
+        {
+          "youtubeId": "DRDI0KApHZw",
+          "quote": "specialist companies that exist for one job"
+        }
+      ]
+    },
+    {
+      "id": "q02",
+      "type": "fact",
+      "question": "What does backlog, or RPO, mean?",
+      "youtubeIds": ["DRDI0KApHZw"],
+      "evidence": [
+        {
+          "youtubeId": "DRDI0KApHZw",
+          "quote": "It is rent customers have already promised to pay, but have not paid yet"
+        }
+      ]
+    },
+    {
+      "id": "q03",
+      "type": "fact",
+      "question": "What share of CoreWeave's revenue comes from its three biggest customers?",
+      "youtubeIds": ["DRDI0KApHZw"],
+      "evidence": [
+        {
+          "youtubeId": "DRDI0KApHZw",
+          "quote": "three customers made up about 72% of Coreweave's revenue"
+        }
+      ]
+    },
+    {
+      "id": "q04",
+      "type": "list",
+      "question": "What are the three questions to ask before looking at the chart of an AI cloud stock?",
+      "youtubeIds": ["DRDI0KApHZw"],
+      "evidence": [
+        {
+          "youtubeId": "DRDI0KApHZw",
+          "quote": "Ask three questions before you look at the chart of any AI cloud stock"
+        },
+        {
+          "youtubeId": "DRDI0KApHZw",
+          "quote": "And four checks: contracts versus debt, cash versus spending, who pays the rent, and the latest results"
+        }
+      ]
+    },
+    {
+      "id": "q05",
+      "type": "list",
+      "question": "What are the four risks the video sums up for neo cloud stocks?",
+      "youtubeIds": ["DRDI0KApHZw"],
+      "evidence": [
+        {
+          "youtubeId": "DRDI0KApHZw",
+          "quote": "Four risks: heavy debt, chips that lose value, a few big customers, and costly new financing"
+        }
+      ]
+    },
+    {
+      "id": "q06",
+      "type": "fact",
+      "question": "How quickly does an Nvidia H100 chip lose value?",
+      "youtubeIds": ["DRDI0KApHZw"],
+      "evidence": [
+        {
+          "youtubeId": "DRDI0KApHZw",
+          "quote": "it keeps nearly its value in the first year and about half after 4 years"
+        }
+      ]
+    },
+    {
+      "id": "q07",
+      "type": "overview",
+      "question": "What is this video about?",
+      "youtubeIds": ["DRDI0KApHZw"],
+      "evidence": [
+        {
+          "youtubeId": "DRDI0KApHZw",
+          "quote": "I will explain what a neo cloud is, why debt is the worry, and give you three checks for any AI cloud stock"
+        }
+      ]
+    },
+    {
+      "id": "q08",
+      "type": "fact",
+      "question": "What did Oracle's force majeure notice say?",
+      "youtubeIds": ["DRDI0KApHZw"],
+      "evidence": [
+        {
+          "youtubeId": "DRDI0KApHZw",
+          "quote": "Oracle also sent a force majeure notice to the developer of a New Mexico data center"
+        }
+      ]
+    },
+    {
+      "id": "q09",
+      "type": "fact",
+      "question": "How long is the median wait for new power generation to be connected to the US grid?",
+      "youtubeIds": ["PMwIW8ZT69o"],
+      "evidence": [
+        {
+          "youtubeId": "PMwIW8ZT69o",
+          "quote": "get switched on is roughly 5 years"
+        }
+      ]
+    },
+    {
+      "id": "q10",
+      "type": "fact",
+      "question": "How many gas turbines did xAI buy for its Memphis data center?",
+      "youtubeIds": ["PMwIW8ZT69o"],
+      "evidence": [
+        {
+          "youtubeId": "PMwIW8ZT69o",
+          "quote": "He bought like 35 of these gas turbines for xAI's Colossus supercomputer in Memphis"
+        }
+      ]
+    },
+    {
+      "id": "q11",
+      "type": "list",
+      "question": "How does China's electricity production compare with the US?",
+      "youtubeIds": ["PMwIW8ZT69o"],
+      "evidence": [
+        {
+          "youtubeId": "PMwIW8ZT69o",
+          "quote": "China has far more electricity than the United States"
+        },
+        {
+          "youtubeId": "PMwIW8ZT69o",
+          "quote": "China added the equivalent of 40% of the entire US grid's capacity in a single year"
+        }
+      ]
+    },
+    {
+      "id": "q12",
+      "type": "fact",
+      "question": "How do Chinese AI model prices compare with OpenAI and Anthropic models?",
+      "youtubeIds": ["PMwIW8ZT69o"],
+      "evidence": [
+        {
+          "youtubeId": "PMwIW8ZT69o",
+          "quote": "DeepSeek V4 Flash cost 3 cents per test compared to 86 cents for Moonshot AI's Kimmy K3"
+        }
+      ]
+    },
+    {
+      "id": "q13",
+      "type": "fact",
+      "question": "What tariff does the US put on chips sold to China?",
+      "youtubeIds": ["PMwIW8ZT69o"],
+      "evidence": [
+        {
+          "youtubeId": "PMwIW8ZT69o",
+          "quote": "The US is imposing a 25% tariff on these chips destined for China"
+        }
+      ]
+    },
+    {
+      "id": "q14",
+      "type": "overview",
+      "question": "What is the main argument about the AI bubble in this video?",
+      "youtubeIds": ["PMwIW8ZT69o"],
+      "evidence": [
+        {
+          "youtubeId": "PMwIW8ZT69o",
+          "quote": "America has the chips, but it's running out of power. China has the power, but it's short on chips"
+        },
+        {
+          "youtubeId": "PMwIW8ZT69o",
+          "quote": "Elon's talking about three elements in one system"
+        }
+      ]
+    },
+    {
+      "id": "q15",
+      "type": "fact",
+      "question": "How much has Nvidia invested directly in neoclouds?",
+      "youtubeIds": ["mE-DrQNRsRA"],
+      "evidence": [
+        {
+          "youtubeId": "mE-DrQNRsRA",
+          "quote": "The chipmaker put well over $7 billion directly into specialized clouds"
+        }
+      ]
+    },
+    {
+      "id": "q16",
+      "type": "paraphrase",
+      "question": "Why is borrowing against GPUs risky when new chips come out so often?",
+      "youtubeIds": ["mE-DrQNRsRA"],
+      "evidence": [
+        {
+          "youtubeId": "mE-DrQNRsRA",
+          "quote": "recent financing runs for about 6 years on average, while Nvidia now ships a new generation of chips roughly every single year"
+        }
+      ]
+    },
+    {
+      "id": "q17",
+      "type": "fact",
+      "question": "How big was CoreWeave's interest expense in the second quarter?",
+      "youtubeIds": ["mE-DrQNRsRA"],
+      "evidence": [
+        {
+          "youtubeId": "mE-DrQNRsRA",
+          "quote": "Coreweave interest expense came to $640 million"
+        }
+      ]
+    },
+    {
+      "id": "q18",
+      "type": "paraphrase",
+      "question": "Why might Elon Musk have his own reasons to talk neoclouds down?",
+      "youtubeIds": ["mE-DrQNRsRA"],
+      "evidence": [
+        {
+          "youtubeId": "mE-DrQNRsRA",
+          "quote": "SpaceX runs its own AI computing operation, which puts it in direct competition with the Neoclouds"
+        }
+      ]
+    },
+    {
+      "id": "q19",
+      "type": "multi-video",
+      "question": "What did Gartner forecast for neo clouds?",
+      "youtubeIds": ["DRDI0KApHZw", "mE-DrQNRsRA"],
+      "evidence": [
+        {
+          "youtubeId": "DRDI0KApHZw",
+          "quote": "Gartner said most neo clouds will stop operating independently by 2030"
+        },
+        {
+          "youtubeId": "mE-DrQNRsRA",
+          "quote": "would stop operating independently by around the end of the decade"
+        }
+      ]
+    },
+    {
+      "id": "q20",
+      "type": "multi-video",
+      "question": "How did CoreWeave's bond yields change?",
+      "youtubeIds": ["DRDI0KApHZw", "mE-DrQNRsRA"],
+      "evidence": [
+        {
+          "youtubeId": "mE-DrQNRsRA",
+          "quote": "investors were happy to lend at a yield of around 9.6%"
+        },
+        {
+          "youtubeId": "mE-DrQNRsRA",
+          "quote": "trading at around a yield of close to 16%"
+        },
+        {
+          "youtubeId": "DRDI0KApHZw",
+          "quote": "A new batch of Coreweave bonds briefly yielded above 15%"
+        }
+      ]
+    },
+    {
+      "id": "q21",
+      "type": "multi-video",
+      "question": "What did Elon Musk say about the limits on AI?",
+      "youtubeIds": ["PMwIW8ZT69o", "mE-DrQNRsRA"],
+      "evidence": [
+        {
+          "youtubeId": "PMwIW8ZT69o",
+          "quote": "constraints on AI are essentially electricity and AI chips"
+        },
+        {
+          "youtubeId": "PMwIW8ZT69o",
+          "quote": "slightly more on power and cooling than it is on AI chips"
+        }
+      ]
+    },
+    {
+      "id": "q22",
+      "type": "multi-video",
+      "question": "Which companies are the biggest makers of gas turbines?",
+      "youtubeIds": ["DRDI0KApHZw", "PMwIW8ZT69o", "mE-DrQNRsRA"],
+      "evidence": [
+        {
+          "youtubeId": "PMwIW8ZT69o",
+          "quote": "GE Vernova, Siemens Energy, and Mitsubishi Heavy"
+        }
+      ]
+    },
+    {
+      "id": "q23",
+      "type": "paraphrase",
+      "question": "What goes wrong when the chips used as security lose value?",
+      "youtubeIds": ["DRDI0KApHZw", "mE-DrQNRsRA"],
+      "evidence": [
+        {
+          "youtubeId": "DRDI0KApHZw",
+          "quote": "The chips are the collateral, so how fast do they lose value"
+        },
+        {
+          "youtubeId": "mE-DrQNRsRA",
+          "quote": "those chips are worth less than when they were pledged"
+        }
+      ]
+    },
+    {
+      "id": "q24",
+      "type": "unanswerable",
+      "question": "What did Mark Zuckerberg say about Meta's AI plans?",
+      "youtubeIds": ["DRDI0KApHZw", "PMwIW8ZT69o", "mE-DrQNRsRA"],
+      "evidence": []
+    },
+    {
+      "id": "q25",
+      "type": "unanswerable",
+      "question": "What is the current price of Tesla stock?",
+      "youtubeIds": ["DRDI0KApHZw", "PMwIW8ZT69o", "mE-DrQNRsRA"],
+      "evidence": []
+    }
+  ]
+}

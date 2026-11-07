@@ -72,9 +72,79 @@ Test video for most entries: a 87-minute RAG tutorial (about 11,000 words, auto-
 
 **To try:** tune the margin and top-k with evals, query rewriting and decomposition for vague or multi-part questions, hybrid search, and a reranker.
 
+**Later change:** top-k became 12 and the margin 0.12, see section 9.
+
+## 6. Generation (prompt, citations, model fallback)
+
+**What it does:** puts the retrieved chunks into a prompt as numbered excerpts (video id and timestamp for each), puts the question last, and asks a chat model to answer only from the excerpts and cite them as [1], [2]. Temperature is 0.2 so the answer stays close to the text.
+
+**What I found**
+
+- `gpt-oss` writes citations as 【1】 whatever the prompt says, so a small function rewrites them to plain [1]. The UI then only has to understand one format.
+- The Gemini free tier was unreliable. It often answered "high demand" (503), and it was also slow when it did answer. The same short prompt took 193 seconds on Gemini and 0.96 seconds on Groq in one test, and 19 seconds on Gemini in another. Groq is now tried first and Gemini is the fallback.
+- The fallback only switches when a provider returns an error. It cannot switch away from a call that just hangs.
+
+**Limitation:** no timeout on the first token for answers, so a provider that hangs without an error can still freeze a chat.
+
+**To try:** a first-token timeout, and comparing the models with the judge evals.
+
+## 7. Streaming (SSE)
+
+**What it does:** sends the answer to the browser word by word as Server-Sent Events: `start`, `sources`, many `token` events, then `done` (or `error`).
+
+**What I found**
+
+- With Groq the first token arrived after about 1.2 seconds, and the remaining 75 tokens followed within 0.2 seconds. Tokens come in bursts, so the browser reveals them a few characters per frame to get a steady flow.
+- The generator waits for the first token before it returns. That is what lets the fallback switch models without the user seeing anything. A failure after the first token cannot be hidden, so the message is saved as `failed` with the text written so far.
+- The answer text is saved about once a second, and the server keeps writing the answer even if the user closes the tab. A reloaded page finds the finished answer.
+
+**Limitation:** there is no way to cancel an answer that is being written.
+
+## 8. Query rewriting for follow-up questions
+
+**What it does:** turns a follow-up such as "and in China?" into a standalone question before searching. It reads the last 10 finished messages from Postgres, asks a small model to rewrite the last message, and uses the result for both the search and the prompt. The first message of a chat is not rewritten. If every model fails or times out, the original question is used.
+
+**What I found**
+
+- Rewrites took 0.6 to 0.9 seconds with Groq. "and in China?" became "How much power do AI data centers need in China?", a question that was already clear came back unchanged, and "What does he think about cooling?" became "What does Elon Musk think about cooling?".
+- The rewriter can copy a wrong claim from an earlier answer. A rewrite once contained "cooling being a slightly bigger constraint than power", a premise the assistant had stated earlier and the transcript did not support.
+- It can also lose the topic: "and what about water use?" became just "What about water use?" with no mention of data centers.
+- The rewritten question is saved on the message (`search_query`) and shown in the UI, so a bad answer can be traced to a bad rewrite.
+
+**Limitation:** one extra model call per follow-up, and it reads assistant text, which may contain errors.
+
+**To try:** rewrite from user messages only, tell the model to keep the topic, and measure with a set of follow-up questions.
+
+## 9. Short answers: the prompt and the retrieval settings
+
+**What I found**
+
+- The question "Which companies provide neo cloud services?" got a one-sentence answer. Two things caused it. The prompt ended with "Answer clearly and briefly", and retrieval kept only 3 chunks.
+- The best chunk scored 0.735 and the other useful chunks about 0.65. The margin of 0.08 cut the line at 0.655, so 3 of the 7 useful chunks were kept. The margin, not top-k, was the limit.
+- I removed "briefly", asked for names, numbers and reasons with the length matched to the question, and changed top-k from 8 to 12 and the margin from 0.08 to 0.12. The answer became a structured list from 7 chunks, and the details I checked (Iren started as a Bitcoin miner, Lambda is private) are in the transcript.
+- When a video does not contain the topic at all, scores are flat and low. The same question against a video about something else scored between 0.522 and 0.557 for all candidates.
+
+**Limitation:** 12 and 0.12 come from one question. A wider margin can add noise on questions with one clear answer.
+
+**To try:** tune both numbers with the retrieval eval.
+
+## 10. Eval set v1 (draft)
+
+**What it is:** 25 questions on three videos (48 chunks): fact, list, overview, paraphrase, multi-video, and two the videos cannot answer. The right answer is stored as a verbatim transcript quote, which the code turns into a time range. A retrieved chunk is correct if its time range overlaps it, so the labels still work when chunking changes.
+
+**What I found in the first review**
+
+- All 25 quotes were found in the stored chunks.
+- With top-k 12 and margin 0.12, retrieval found every piece of evidence for all 23 answerable questions, most of them at rank 1. The set is too easy to separate strategies: the videos are short (12 to 19 chunks), so keeping 12 chunks keeps nearly the whole video.
+- The two unanswerable questions had top scores of 0.60 and 0.59. The lowest top score among answerable questions was 0.63. The gap is narrow.
+
+**To try:** a larger pool (more and longer videos in each question), and measuring at small k (recall@1, @3, @5) so the margin does not hide differences.
+
 ## Open questions
 
 - Does 768 dimensions lose quality compared with 3072?
 - Does correcting misheard terms improve retrieval?
 - Does hybrid search (dense plus BM25) fix near-ties and exact-term questions?
 - Does a reranker improve the final order of results?
+- Does rewriting from user messages only avoid carrying wrong claims into the search?
+- Can the top score separate answerable from unanswerable questions, or is the gap too narrow?
