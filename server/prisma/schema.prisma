@@ -108,6 +108,9 @@ model Message {
   model          String?
   // Chunks the answer was based on (video id, timestamp, text snippet). Used for citations and evals.
   sources        Json?
+  // The standalone question that was actually searched, after history-aware rewriting.
+  // Kept so a bad follow-up answer can be traced back to a bad rewrite, and for evals.
+  searchQuery    String?       @map("search_query")
   createdAt      DateTime      @default(now()) @map("created_at")
   conversation   Conversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 

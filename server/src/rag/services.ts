@@ -3,8 +3,9 @@ import { config } from '../config.js';
 import { RecursiveChunker } from './chunking/recursiveChunker.js';
 import type { Chunker } from './chunking/types.js';
 import { EMBEDDING_DIMENSIONS, GeminiEmbedder, type Embedder } from './embeddings/embedder.js';
-import { createGenerator } from './generation/providers.js';
+import { createGenerator, createRewriter } from './generation/providers.js';
 import type { Generator } from './generation/types.js';
+import type { QuestionRewriter } from './rewriting/types.js';
 import type { TranscriptProvider } from './transcript/types.js';
 import { YoutubeTranscriptProvider } from './transcript/youtubeProvider.js';
 import { QdrantChunkStore } from './vectorstore/qdrantChunkStore.js';
@@ -16,6 +17,7 @@ export interface RagServices {
   embedder: Embedder;
   store: QdrantChunkStore;
   generator: Generator;
+  rewriter: QuestionRewriter;
 }
 
 let services: RagServices | undefined;
@@ -26,6 +28,7 @@ let services: RagServices | undefined;
  */
 export function getRagServices(): RagServices {
   if (!services) {
+    const keys = { googleApiKey: config.GOOGLE_API_KEY, groqApiKey: config.GROQ_API_KEY };
     const chunker = new RecursiveChunker();
     services = {
       transcriptProvider: new YoutubeTranscriptProvider(),
@@ -37,10 +40,8 @@ export function getRagServices(): RagServices {
         `chunks_${chunker.name}`,
         EMBEDDING_DIMENSIONS,
       ),
-      generator: createGenerator({
-        googleApiKey: config.GOOGLE_API_KEY,
-        groqApiKey: config.GROQ_API_KEY,
-      }),
+      generator: createGenerator(keys),
+      rewriter: createRewriter(keys),
     };
   }
   return services;

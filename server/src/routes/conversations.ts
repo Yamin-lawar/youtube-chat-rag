@@ -4,6 +4,7 @@ import { answerQuestion } from '../chat/answerQuestion.js';
 import { titleFromQuestion } from '../chat/title.js';
 import { prisma } from '../db/client.js';
 import { openEventStream } from '../lib/sse.js';
+import { MAX_HISTORY_MESSAGES } from '../rag/rewriting/prompt.js';
 import { retrieveChunks } from '../rag/retrieval/retriever.js';
 import { getRagServices } from '../rag/services.js';
 
@@ -107,6 +108,7 @@ conversationsRouter.get('/:id', async (req, res) => {
       status: true,
       model: true,
       sources: true,
+      searchQuery: true,
       createdAt: true,
     },
   });
@@ -168,6 +170,20 @@ conversationsRouter.post('/:id/messages', async (req, res) => {
     .filter(({ active }) => active)
     .map(({ video }) => video.youtubeId);
 
+  // Built before anything is saved, so a missing API key is a clean error and does not leave
+  // an answer stuck in "streaming".
+  const { embedder, store, generator, rewriter } = getRagServices();
+
+  // The earlier messages, read before the new question is saved so it is not in its own history.
+  // Only finished messages count: a failed or half-written answer would only confuse the rewrite.
+  const recent = await prisma.message.findMany({
+    where: { conversationId: conversation.id, status: 'complete' },
+    orderBy: { createdAt: 'desc' },
+    take: MAX_HISTORY_MESSAGES,
+    select: { role: true, content: true },
+  });
+  const history = recent.reverse();
+
   // Both rows are written before streaming starts, so a dropped connection still leaves
   // the question and a (possibly partial) answer in the history.
   const [userMessage, assistantMessage] = await prisma.$transaction([
@@ -194,11 +210,10 @@ conversationsRouter.post('/:id/messages', async (req, res) => {
   const emit = openEventStream(res);
   emit('start', { userMessageId: userMessage.id, assistantMessageId: assistantMessage.id });
 
-  const { embedder, store, generator } = getRagServices();
   await answerQuestion(
-    question,
-    youtubeIds,
+    { question, youtubeIds, history },
     {
+      rewriter,
       retrieve: (q, ids) => retrieveChunks(q, { embedder, store }, { youtubeIds: ids }),
       generator,
       saveMessage: async ({ sources, ...patch }) => {

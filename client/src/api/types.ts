@@ -50,6 +50,8 @@ export interface Message {
   status: MessageStatus;
   model: string | null;
   sources: Source[] | null;
+  /** The standalone question that was searched, after rewriting a follow-up. */
+  searchQuery: string | null;
   createdAt: string;
 }
 

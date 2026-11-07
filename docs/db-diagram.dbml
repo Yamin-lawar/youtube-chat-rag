@@ -75,6 +75,7 @@ Table messages {
   status message_status [not null, default: 'complete']
   model text [note: 'LLM that produced an assistant message']
   sources jsonb [note: 'Chunks the answer was based on (citations, evals)']
+  search_query text [note: 'The standalone question actually searched, after history-aware rewriting']
   created_at timestamp [not null, default: `now()`]
 
   indexes {

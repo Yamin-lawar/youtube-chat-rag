@@ -65,7 +65,7 @@ function toSources(chunks: ScoredChunk[]): Source[] {
 }
 
 // Models return text either as a string or as a list of parts, depending on the provider.
-function contentToText(content: MessageContent): string {
+export function contentToText(content: MessageContent): string {
   if (typeof content === 'string') return content;
   return content.map((part) => (part.type === 'text' && 'text' in part ? part.text : '')).join('');
 }

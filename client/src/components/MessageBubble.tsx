@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { AlertTriangle, RotateCcw, Sparkles } from 'lucide-react';
+import { AlertTriangle, RotateCcw, Search, Sparkles } from 'lucide-react';
 import type { MessageStatus, Source } from '../api/types';
 import { Markdown } from './Markdown';
 import { SourceList } from './SourceList';
@@ -25,6 +25,8 @@ interface AssistantMessageProps {
   typing?: boolean;
   /** True before the first word: the server is still searching the videos. */
   thinking?: boolean;
+  /** Shown when the question was rewritten before searching, so the reader can see how. */
+  searchedFor?: string | undefined;
   onRetry?: (() => void) | undefined;
 }
 
@@ -35,6 +37,7 @@ export function AssistantMessage({
   videoTitles,
   typing = false,
   thinking = false,
+  searchedFor,
   onRetry,
 }: AssistantMessageProps) {
   return (
@@ -44,6 +47,14 @@ export function AssistantMessage({
       </div>
 
       <div className="min-w-0 flex-1">
+        {searchedFor && (
+          <p className="mb-2 flex items-start gap-1.5 text-xs leading-5 text-muted">
+            <Search size={12} className="mt-1 shrink-0" />
+            <span>
+              Searched for: <span className="italic text-ink/80">{searchedFor}</span>
+            </span>
+          </p>
+        )}
         {thinking ? (
           <Thinking />
         ) : (

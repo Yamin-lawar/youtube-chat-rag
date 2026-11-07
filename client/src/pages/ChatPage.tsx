@@ -170,7 +170,7 @@ function ChatThread({ conversation, live, sendError, onSend, onCaughtUp }: ChatT
               <EmptyChat videos={conversation.videos} onPick={onSend} disabled={busy} />
             )}
 
-            {saved.map((message) =>
+            {saved.map((message, index) =>
               message.role === 'user' ? (
                 <UserMessage key={message.id} content={message.content} />
               ) : (
@@ -182,6 +182,11 @@ function ChatThread({ conversation, live, sendError, onSend, onCaughtUp }: ChatT
                   videoTitles={videoTitles}
                   typing={message.status === 'streaming'}
                   thinking={message.status === 'streaming' && !message.content}
+                  searchedFor={
+                    message.searchQuery && message.searchQuery !== saved[index - 1]?.content
+                      ? message.searchQuery
+                      : undefined
+                  }
                   onRetry={message === last ? retry : undefined}
                 />
               ),
