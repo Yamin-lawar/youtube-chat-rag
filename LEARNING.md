@@ -143,10 +143,13 @@ Test video for most entries: a 87-minute RAG tutorial (about 11,000 words, auto-
 |                            | top 1 | top 3 | top 5 | top 10 |
 | -------------------------- | ----- | ----- | ----- | ------ |
 | Hit rate                   | 74%   | 91%   | 100%  | 100%   |
-| Recall                     | 67%   | 81%   | 92%   | 100%   |
+| Recall@k                   | 67%   | 81%   | 92%   | 100%   |
+| Precision@k                | 74%   | 49%   | 34%   | 20%    |
+| Best possible precision@k  | 100%  | 68%   | 43%   | 22%    |
+| nDCG@k                     | 74%   | 74%   | 78%   | 83%    |
 | Random guessing (hit rate) | 12%   | 33%   | 51%   | 81%    |
 
-MRR 0.841. By type, MRR was 1.00 for facts, 0.75 for lists, 0.71 for multi-video, 0.83 for paraphrases and 0.375 for overviews. The chunks the app really sends to the model (8.9 on average) contained 100% of the evidence.
+MRR 0.841. Precision looks low at higher k only because few chunks are correct (about two per question), so the best possible precision at top 5 is 43% and the score of 34% is close to that ceiling. By type, MRR was 1.00 for facts, 0.75 for lists, 0.71 for multi-video, 0.83 for paraphrases and 0.375 for overviews. The chunks the app really sends to the model (8.9 on average) contained 100% of the evidence.
 
 **What the baseline says:** retrieval is clearly better than guessing at the top of the list (74% against 12% at top 1), but the pool is small, so the numbers at top 5 and top 10 are close to what guessing gives. Single facts are solved, and the weak spots are overview, list and multi-video questions.
 
