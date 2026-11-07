@@ -20,12 +20,23 @@ export interface GeneratorKeys {
   groqApiKey?: string | undefined;
 }
 
-/** The chat models we can use, in the order they are tried. Only providers with a key are included. */
+/**
+ * The chat models we can use, in the order they are tried: Groq first, then Gemini. Groq
+ * answers in about a second, while the Gemini free tier was sometimes overloaded and took
+ * from 19 seconds to minutes. Only providers with a key are included.
+ */
 function buildModels(
   { googleApiKey, groqApiKey }: GeneratorKeys,
   temperature: number,
 ): Array<{ name: string; model: BaseChatModel }> {
   const models: Array<{ name: string; model: BaseChatModel }> = [];
+
+  if (groqApiKey) {
+    models.push({
+      name: `groq:${GROQ_MODEL}`,
+      model: new ChatGroq({ apiKey: groqApiKey, model: GROQ_MODEL, temperature }),
+    });
+  }
 
   if (googleApiKey) {
     models.push({
@@ -40,13 +51,6 @@ function buildModels(
     });
   }
 
-  if (groqApiKey) {
-    models.push({
-      name: `groq:${GROQ_MODEL}`,
-      model: new ChatGroq({ apiKey: groqApiKey, model: GROQ_MODEL, temperature }),
-    });
-  }
-
   if (models.length === 0) {
     throw new Error('Set GOOGLE_API_KEY or GROQ_API_KEY in .env to generate answers.');
   }
@@ -54,8 +58,8 @@ function buildModels(
 }
 
 /**
- * Builds the generator from whichever API keys are set. Gemini is tried first and Groq
- * takes over when Gemini fails, for example on the free tier's "high demand" 503 errors.
+ * Builds the generator from whichever API keys are set. Groq is tried first and Gemini
+ * takes over when Groq fails, for example when its free-tier rate limit is reached.
  */
 export function createGenerator(keys: GeneratorKeys): Generator {
   const generators = buildModels(keys, ANSWER_TEMPERATURE).map(
@@ -64,11 +68,7 @@ export function createGenerator(keys: GeneratorKeys): Generator {
   return new FallbackGenerator(generators);
 }
 
-/**
- * The query rewriter. Groq goes first here, the opposite of the generator: a rewrite is one
- * short sentence, and in our tests Groq answered it in about a second while Gemini took
- * between 19 and 193 seconds. The rewriter also gives up on a model after a few seconds.
- */
+/** The query rewriter, using the same providers and fallback order as the generator. */
 export function createRewriter(keys: GeneratorKeys): QuestionRewriter {
-  return new LlmQuestionRewriter(buildModels(keys, REWRITE_TEMPERATURE).reverse());
+  return new LlmQuestionRewriter(buildModels(keys, REWRITE_TEMPERATURE));
 }
