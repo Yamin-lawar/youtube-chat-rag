@@ -1,13 +1,18 @@
 import type { Embedder } from '../embeddings/embedder.js';
 import type { QdrantChunkStore, ScoredChunk } from '../vectorstore/qdrantChunkStore.js';
 
-// How many candidates to ask Qdrant for before the cutoff removes weak ones.
-const DEFAULT_TOP_K = 8;
+// How many candidates to ask Qdrant for before the cutoff removes weak ones. Raised from 8:
+// questions such as "which companies are mentioned" are answered by many passages, and the
+// model cannot list what it was never given.
+export const DEFAULT_TOP_K = 12;
 
 // Cosine scores are relative: in our tests a good match scored about 0.83 and an unrelated
 // question's best match about 0.52, while chunks of one video score 0.85+ against each other.
 // So a fixed threshold does not work. Instead we keep chunks close to the best score.
-const DEFAULT_MAX_SCORE_DROP = 0.08;
+// Raised from 0.08 after "Which companies provide neo cloud services?": the best chunk scored
+// 0.735 and the next relevant ones 0.65, so 0.08 kept only 3 of the 7 useful chunks.
+// Both numbers are still guesses, to be tuned with the evals.
+export const DEFAULT_MAX_SCORE_DROP = 0.12;
 
 export interface RetrieveOptions {
   youtubeIds: string[];

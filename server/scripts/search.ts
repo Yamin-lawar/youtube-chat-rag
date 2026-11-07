@@ -4,7 +4,11 @@ import { QdrantClient } from '@qdrant/js-client-rest';
 import { RecursiveChunker } from '../src/rag/chunking/recursiveChunker.js';
 import { config } from '../src/config.js';
 import { EMBEDDING_DIMENSIONS, GeminiEmbedder } from '../src/rag/embeddings/embedder.js';
-import { retrieveChunks } from '../src/rag/retrieval/retriever.js';
+import {
+  DEFAULT_MAX_SCORE_DROP,
+  DEFAULT_TOP_K,
+  retrieveChunks,
+} from '../src/rag/retrieval/retriever.js';
 import { QdrantChunkStore } from '../src/rag/vectorstore/qdrantChunkStore.js';
 
 const question = process.argv[2];
@@ -22,13 +26,18 @@ const store = new QdrantChunkStore(
 );
 const embedder = new GeminiEmbedder(config.GOOGLE_API_KEY);
 
-// Ask for more than the default so you can see what the cutoff removes.
-const TOP_K = 8;
-const everything = await store.search(await embedder.embedQuery(question), youtubeIds, TOP_K);
-const kept = await retrieveChunks(question, { embedder, store }, { youtubeIds, topK: TOP_K });
+// Look at a few more candidates than retrieval keeps, so you can see what falls outside it.
+const EXTRA_CANDIDATES = 8;
+const everything = await store.search(
+  await embedder.embedQuery(question),
+  youtubeIds,
+  DEFAULT_TOP_K + EXTRA_CANDIDATES,
+);
+const kept = await retrieveChunks(question, { embedder, store }, { youtubeIds });
 
 console.log(`Question: ${question}`);
-console.log(`Videos:   ${youtubeIds.join(', ')}\n`);
+console.log(`Videos:   ${youtubeIds.join(', ')}`);
+console.log(`Settings: topK ${DEFAULT_TOP_K}, margin ${DEFAULT_MAX_SCORE_DROP}\n`);
 
 for (const chunk of everything) {
   const isKept = kept.some(
@@ -41,4 +50,4 @@ for (const chunk of everything) {
   console.log(`          ${chunk.text.slice(0, 160).replace(/\s+/g, ' ')}...\n`);
 }
 
-console.log(`${kept.length} of ${everything.length} chunks kept by the cutoff.`);
+console.log(`${kept.length} chunks kept (of ${everything.length} candidates shown).`);
