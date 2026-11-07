@@ -138,7 +138,19 @@ Test video for most entries: a 87-minute RAG tutorial (about 11,000 words, auto-
 - With top-k 12 and margin 0.12, retrieval found every piece of evidence for all 23 answerable questions, most of them at rank 1. The set is too easy to separate strategies: the videos are short (12 to 19 chunks), so keeping 12 chunks keeps nearly the whole video.
 - The two unanswerable questions had top scores of 0.60 and 0.59. The lowest top score among answerable questions was 0.63. The gap is narrow.
 
-**To try:** a larger pool (more and longer videos in each question), and measuring at small k (recall@1, @3, @5) so the margin does not hide differences.
+**Baseline scores** (`npm run eval --workspace server`, dense search, recursive 1000/200 chunks, 23 answerable questions):
+
+|                            | top 1 | top 3 | top 5 | top 10 |
+| -------------------------- | ----- | ----- | ----- | ------ |
+| Hit rate                   | 74%   | 91%   | 100%  | 100%   |
+| Recall                     | 67%   | 81%   | 92%   | 100%   |
+| Random guessing (hit rate) | 12%   | 33%   | 51%   | 81%    |
+
+MRR 0.841. By type, MRR was 1.00 for facts, 0.75 for lists, 0.71 for multi-video, 0.83 for paraphrases and 0.375 for overviews. The chunks the app really sends to the model (8.9 on average) contained 100% of the evidence.
+
+**What the baseline says:** retrieval is clearly better than guessing at the top of the list (74% against 12% at top 1), but the pool is small, so the numbers at top 5 and top 10 are close to what guessing gives. Single facts are solved, and the weak spots are overview, list and multi-video questions.
+
+**To try:** a larger pool (more and longer videos in each question) so the high-k numbers stop saturating.
 
 ## Open questions
 
