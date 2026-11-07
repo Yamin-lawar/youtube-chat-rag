@@ -14,7 +14,7 @@ const passageAt = (startS: number): TimeSpan[] => [
 
 describe('scoreQuestion', () => {
   it('gives full marks when the correct chunk is ranked first', () => {
-    const score = scoreQuestion([chunkAt(0), chunkAt(300)], [passageAt(20)]);
+    const score = scoreQuestion([chunkAt(0), chunkAt(300)], [passageAt(20)], 1);
     expect(score.firstRank).toBe(1);
     expect(score.reciprocalRank).toBe(1);
     expect(score.hitAt[1]).toBe(1);
@@ -22,7 +22,7 @@ describe('scoreQuestion', () => {
   });
 
   it('uses 1/rank for the reciprocal rank', () => {
-    const score = scoreQuestion([chunkAt(300), chunkAt(600), chunkAt(0)], [passageAt(20)]);
+    const score = scoreQuestion([chunkAt(300), chunkAt(600), chunkAt(0)], [passageAt(20)], 1);
     expect(score.firstRank).toBe(3);
     expect(score.reciprocalRank).toBeCloseTo(1 / 3);
     expect(score.hitAt[1]).toBe(0);
@@ -30,7 +30,7 @@ describe('scoreQuestion', () => {
   });
 
   it('scores zero when no returned chunk covers the answer', () => {
-    const score = scoreQuestion([chunkAt(300), chunkAt(600)], [passageAt(20)]);
+    const score = scoreQuestion([chunkAt(300), chunkAt(600)], [passageAt(20)], 1);
     expect(score.firstRank).toBeNull();
     expect(score.reciprocalRank).toBe(0);
     expect(score.hitAt[10]).toBe(0);
@@ -40,7 +40,7 @@ describe('scoreQuestion', () => {
   it('counts the share of passages found for recall', () => {
     // Two passages, only the first is covered within the top 1; both within the top 3.
     const ranked = [chunkAt(0), chunkAt(300), chunkAt(600)];
-    const score = scoreQuestion(ranked, [passageAt(20), passageAt(620)]);
+    const score = scoreQuestion(ranked, [passageAt(20), passageAt(620)], 2);
     expect(score.recallAt[1]).toBe(0.5);
     expect(score.recallAt[3]).toBe(1);
     expect(score.hitAt[1]).toBe(1);
@@ -48,7 +48,40 @@ describe('scoreQuestion', () => {
 
   it('accepts a passage that is covered by either of two overlapping spans', () => {
     const passage = [...passageAt(20), ...passageAt(700)];
-    expect(scoreQuestion([chunkAt(650)], [passage]).firstRank).toBe(1);
+    expect(scoreQuestion([chunkAt(650)], [passage], 1).firstRank).toBe(1);
+  });
+});
+
+describe('precision and nDCG', () => {
+  // Rank 1 and rank 3 are correct, rank 2 is not. Two chunks in the pool are correct.
+  const ranked = [chunkAt(0), chunkAt(300), chunkAt(600)];
+  const evidence = [passageAt(20), passageAt(620)];
+  const score = scoreQuestion(ranked, evidence, 2);
+
+  it('precision is the share of the top k that is correct', () => {
+    expect(score.precisionAt[1]).toBe(1);
+    expect(score.precisionAt[3]).toBeCloseTo(2 / 3);
+  });
+
+  it('precision counts missing slots as wrong', () => {
+    // Only 3 chunks came back, so the top 5 has 2 correct out of 5.
+    expect(score.precisionAt[5]).toBeCloseTo(2 / 5);
+  });
+
+  it('the best possible precision is capped by how many chunks are correct', () => {
+    expect(score.bestPrecisionAt[1]).toBe(1);
+    expect(score.bestPrecisionAt[5]).toBeCloseTo(2 / 5);
+  });
+
+  it('nDCG is 1 for a perfect order and lower when a correct chunk is pushed down', () => {
+    const perfect = scoreQuestion([chunkAt(0), chunkAt(600), chunkAt(300)], evidence, 2);
+    expect(perfect.ndcgAt[3]).toBeCloseTo(1);
+    // DCG = 1 + 0 + 1/log2(4) = 1.5, ideal = 1 + 1/log2(3) = 1.6309
+    expect(score.ndcgAt[3]).toBeCloseTo(1.5 / (1 + 1 / Math.log2(3)));
+  });
+
+  it('nDCG is 0 when nothing correct is returned', () => {
+    expect(scoreQuestion([chunkAt(300)], evidence, 2).ndcgAt[3]).toBe(0);
   });
 });
 

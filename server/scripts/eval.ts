@@ -84,7 +84,7 @@ for (const question of questions) {
 
   answerable.push({
     question,
-    score: scoreQuestion(ranked, evidence),
+    score: scoreQuestion(ranked, evidence, relevant),
     randomHit: Object.fromEntries(CUTOFFS.map((k) => [k, randomHitAtK(pool.length, relevant, k)])),
     topScore,
     keptRecall: evidenceRecall(kept, evidence),
@@ -103,6 +103,9 @@ console.log(
   `Settings: topK ${DEFAULT_TOP_K}, margin ${DEFAULT_MAX_SCORE_DROP}, chunking recursive 1000/200\n`,
 );
 
+const atEachK = (pick: (r: Result, k: number) => number) =>
+  CUTOFFS.map((k) => pct(mean(answerable.map((r) => pick(r, k)))));
+
 console.log(
   row(
     '',
@@ -112,33 +115,52 @@ console.log(
 console.log(
   row(
     'Hit rate',
-    CUTOFFS.map((k) => pct(mean(answerable.map((r) => r.score.hitAt[k] ?? 0)))),
+    atEachK((r, k) => r.score.hitAt[k] ?? 0),
   ),
 );
 console.log(
   row(
-    'Recall',
-    CUTOFFS.map((k) => pct(mean(answerable.map((r) => r.score.recallAt[k] ?? 0)))),
+    'Recall@k',
+    atEachK((r, k) => r.score.recallAt[k] ?? 0),
+  ),
+);
+console.log(
+  row(
+    'Precision@k',
+    atEachK((r, k) => r.score.precisionAt[k] ?? 0),
+  ),
+);
+console.log(
+  row(
+    '  best possible precision',
+    atEachK((r, k) => r.score.bestPrecisionAt[k] ?? 0),
+  ),
+);
+console.log(
+  row(
+    'nDCG@k',
+    atEachK((r, k) => r.score.ndcgAt[k] ?? 0),
   ),
 );
 console.log(
   row(
     'Random guessing (hit rate)',
-    CUTOFFS.map((k) => pct(mean(answerable.map((r) => r.randomHit[k] ?? 0)))),
+    atEachK((r, k) => r.randomHit[k] ?? 0),
   ),
 );
 console.log(`\n  MRR: ${mean(answerable.map((r) => r.score.reciprocalRank)).toFixed(3)}`);
 
-console.log('\nBy question type (hit rate @1, @3, MRR):');
+console.log('\nBy question type (MRR, recall@5, precision@5, nDCG@5):');
 for (const type of new Set(answerable.map((r) => r.question.type))) {
   const group = answerable.filter((r) => r.question.type === type);
   console.log(
     row(`${type} (${group.length})`, [
-      pct(mean(group.map((r) => r.score.hitAt[1] ?? 0))),
-      pct(mean(group.map((r) => r.score.hitAt[3] ?? 0))),
       mean(group.map((r) => r.score.reciprocalRank))
         .toFixed(3)
         .padStart(5),
+      pct(mean(group.map((r) => r.score.recallAt[5] ?? 0))),
+      pct(mean(group.map((r) => r.score.precisionAt[5] ?? 0))),
+      pct(mean(group.map((r) => r.score.ndcgAt[5] ?? 0))),
     ]),
   );
 }
