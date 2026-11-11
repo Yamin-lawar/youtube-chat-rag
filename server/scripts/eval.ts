@@ -1,9 +1,13 @@
 // Score retrieval on the eval questions. Prints hit rate, recall and MRR.
 //
 //   npm run eval --workspace server
+//   npm run eval --workspace server -- --label hybrid      name the run
+//   npm run eval --workspace server -- --save-baseline     keep this run as the one to beat
 //   (or) npx tsx --env-file=../.env scripts/eval.ts
 //
-// Use scripts/eval-review.ts to look at individual questions and check the labels.
+// Every run is saved in eval/runs/ and compared with eval/baseline.json (use --against <file>
+// to compare with another saved run). Use scripts/eval-review.ts to check the labels.
+import { parseArgs } from 'node:util';
 import { QdrantClient } from '@qdrant/js-client-rest';
 import { RecursiveChunker } from '../src/rag/chunking/recursiveChunker.js';
 import { config } from '../src/config.js';
@@ -16,7 +20,10 @@ import {
   scoreQuestion,
   type QuestionScore,
 } from '../src/eval/metrics.js';
+import { compareRuns, formatComparison } from '../src/eval/compare.js';
 import { loadQuestions } from '../src/eval/questions.js';
+import { buildRunRecord } from '../src/eval/runRecord.js';
+import { currentCommit, loadRun, saveRun, writeRun } from '../src/eval/runStore.js';
 import type { EvalQuestion } from '../src/eval/types.js';
 import { EMBEDDING_DIMENSIONS, GeminiEmbedder } from '../src/rag/embeddings/embedder.js';
 import {
@@ -26,7 +33,17 @@ import {
 } from '../src/rag/retrieval/retriever.js';
 import { QdrantChunkStore, type ChunkPayload } from '../src/rag/vectorstore/qdrantChunkStore.js';
 
-const questions = await loadQuestions(new URL('../eval/questions.json', import.meta.url).pathname);
+const { values: args } = parseArgs({
+  options: {
+    label: { type: 'string', default: 'run' },
+    'save-baseline': { type: 'boolean', default: false },
+    against: { type: 'string' },
+  },
+});
+const evalDir = new URL('../eval/', import.meta.url).pathname;
+const baselinePath = `${evalDir}baseline.json`;
+
+const questions = await loadQuestions(`${evalDir}questions.json`);
 
 const store = new QdrantChunkStore(
   new QdrantClient({ url: config.QDRANT_URL }),
@@ -186,3 +203,43 @@ console.log(
 console.log(
   `  unanswerable: highest top score ${Math.max(...unanswerableTopScores).toFixed(3)}, average ${mean(unanswerableTopScores).toFixed(3)}`,
 );
+
+// Keep this run, and compare it with the baseline (or the file given with --against).
+const record = buildRunRecord(
+  {
+    label: args['save-baseline'] ? 'baseline' : (args.label ?? 'run'),
+    commit: currentCommit(),
+    settings: {
+      topK: DEFAULT_TOP_K,
+      maxScoreDrop: DEFAULT_MAX_SCORE_DROP,
+      chunking: new RecursiveChunker().name,
+    },
+  },
+  answerable.map((r) => ({
+    id: r.question.id,
+    question: r.question.question,
+    type: r.question.type,
+    score: r.score,
+    topScore: r.topScore,
+    keptRecall: r.keptRecall,
+    keptCount: r.keptCount,
+  })),
+  unanswerableTopScores,
+);
+
+console.log(`\nSaved this run: ${await saveRun(record, `${evalDir}runs`)}`);
+
+if (args['save-baseline']) {
+  await writeRun(record, baselinePath);
+  console.log(`Saved as the baseline: ${baselinePath}`);
+} else {
+  const againstPath = args.against ?? baselinePath;
+  try {
+    console.log(
+      `\n${'='.repeat(78)}\n${formatComparison(compareRuns(await loadRun(againstPath), record))}`,
+    );
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
+    console.log(`\nNo ${againstPath} to compare with. Run with --save-baseline to create one.`);
+  }
+}

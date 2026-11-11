@@ -101,6 +101,46 @@ The output has these parts:
 
 Embedding the questions takes a minute or so because of the free-tier rate limit.
 
+## Comparing with earlier runs
+
+Every run is saved as a JSON file in `server/eval/runs/` (not committed) and compared with [baseline.json](../server/eval/baseline.json), the run to beat (committed). The comparison is printed after the normal output.
+
+```bash
+# keep the current numbers as the baseline (do this on a setup you trust)
+npm run eval --workspace server -- --save-baseline
+
+# run an experiment and name it; the output ends with a comparison to the baseline
+npm run eval --workspace server -- --label hybrid
+
+# compare against another saved run instead of the baseline
+npm run eval --workspace server -- --against eval/runs/<file>.json
+
+# compare any two saved runs
+npm run eval:compare --workspace server -- eval/runs/<before>.json eval/runs/<after>.json
+```
+
+The comparison shows the new value and the change in points for each metric and cutoff, the MRR per question type, the settings that differ (top-k, margin, chunking), and the questions where the first correct chunk moved up or down:
+
+```
+                      top 1      top 3      top 5     top 10
+  Hit rate          74% (+4)    92% (0)   100% (0)   100% (0)
+  Recall@k          63% (+3)    81% (0)    91% (0)    97% (0)
+  ...
+  MRR 0.818 -> 0.851 (+0.033)
+
+Questions where the first correct chunk moved up (2):
+  q05 rank 4 -> 1  What are the four risks the video sums up for neo cloud stocks?
+```
+
+(The numbers above are an illustration, not a real result.)
+
+Things to keep in mind:
+
+- **Change one thing per run.** Each file records the git commit, so you can see which code made it.
+- **A run is repeatable.** Two runs with no change give identical numbers, so any difference comes from what you changed.
+- **Check the size of the change.** With 37 answerable questions, one question moving is about 2.7 points of hit rate. Trust changes that point the same way across several metrics.
+- **Questions must match.** If you add or remove questions, the averages are no longer comparable and the comparison prints a warning. Save a new baseline after changing the question set.
+
 ## Checking the labels
 
 A score is only as good as its labels. Before trusting a number, or after editing a question, run the review script from `server/`:
@@ -140,7 +180,7 @@ The file is validated on load ([questions.ts](../server/src/eval/questions.ts)):
 
 ## Baseline
 
-Dense search, recursive chunking (1000 characters, 200 overlap), top-k 12, margin 0.12. 37 answerable and 4 unanswerable questions on five videos (the three short ones plus two long ones, 72 and 50 chunks). The pool for a question is 46.5 chunks on average.
+This is the saved baseline (`server/eval/baseline.json`). Dense search, recursive chunking (1000 characters, 200 overlap), top-k 12, margin 0.12. 37 answerable and 4 unanswerable questions on five videos (the three short ones plus two long ones, 72 and 50 chunks). The pool for a question is 46.5 chunks on average.
 
 |                            | top 1 | top 3 | top 5 | top 10 |
 | -------------------------- | ----- | ----- | ----- | ------ |

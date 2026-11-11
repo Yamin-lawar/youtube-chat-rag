@@ -13,6 +13,9 @@ dist/
 # Local data
 qdrant_storage/
 
+# Eval run history (eval/baseline.json is committed, the runs are not)
+server/eval/runs/
+
 # Logs
 *.log
 npm-debug.log*
