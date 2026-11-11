@@ -28,6 +28,16 @@ npm run dev:client          # app on http://localhost:5173 (proxies /api to the 
 
 Open http://localhost:5173, paste a YouTube link, wait for the video to become ready, select it and start a chat.
 
+## Evaluation
+
+Retrieval is scored on a fixed question set (hit rate, recall, precision, nDCG, MRR) so every change can be compared by numbers.
+
+```bash
+npm run eval --workspace server
+```
+
+How it works, how to read the output and how to check the labels: [docs/EVAL.md](docs/EVAL.md).
+
 ## Project plan
 
 See [PLAN.md](PLAN.md).

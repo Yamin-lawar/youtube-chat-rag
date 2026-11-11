@@ -1,0 +1,162 @@
+# Retrieval eval
+
+How we measure whether retrieval finds the right part of a video, and how to check the numbers yourself.
+
+The eval answers one question: **for a given question, are the chunks the search returns the ones that contain the answer?** It does not judge the written answer. That is a separate step.
+
+## Why it exists
+
+Reading a few answers and deciding they "look fine" cannot show whether a change helped. Hybrid search, a reranker or new chunking each need a fixed set of questions with known answers, scored the same way every run. Run the eval before and after a change. If the numbers go up, the change helped.
+
+## How it works
+
+```
+ server/eval/questions.json
+   25 questions, each with the answer written as a quote from the transcript
+              |
+              v
+ 1. Find the quote in the stored chunks  ->  a time range in the video (the "answer key")
+ 2. Embed the question and search Qdrant ->  a ranked list of chunks
+ 3. A chunk is CORRECT if its time range overlaps the answer's time range
+ 4. Score the ranked list (hit rate, recall, precision, nDCG, MRR)
+```
+
+### The answer key is a quote, not a chunk id
+
+Each question stores a short, verbatim quote from the transcript:
+
+```json
+{
+  "id": "q03",
+  "type": "fact",
+  "question": "What share of CoreWeave's revenue comes from its three biggest customers?",
+  "youtubeIds": ["DRDI0KApHZw"],
+  "evidence": [
+    {
+      "youtubeId": "DRDI0KApHZw",
+      "quote": "three customers made up about 72% of Coreweave's revenue"
+    }
+  ]
+}
+```
+
+We do not store chunk ids because they change whenever the chunking changes. A quote does not. Each run, the code looks the quote up in the stored chunks and turns it into a time range ([evidence.ts](../server/src/eval/evidence.ts)). For q03 that gives `6:11-6:31`.
+
+Two details:
+
+- Chunks store a start and end time, not the time of every word. The quote's position is estimated by assuming an even speaking pace, then widened by 8 seconds on each side. This is accurate to a few seconds, which is enough to tell which chunks cover it.
+- Chunks overlap by 200 characters, so one quote usually sits in two neighbouring chunks. Both count as correct.
+
+Questions of type `unanswerable` have no evidence. They are not scored with the metrics. Instead the eval reports their top similarity score, to see whether the score can tell "answer exists" from "no answer".
+
+### Question types
+
+| Type           | Example                                                       |
+| -------------- | ------------------------------------------------------------- |
+| `fact`         | "What does backlog, or RPO, mean?"                            |
+| `list`         | "What are the four risks the video sums up?" (several quotes) |
+| `overview`     | "What is this video about?"                                   |
+| `paraphrase`   | A fact asked in different words than the transcript uses      |
+| `multi-video`  | A question across two selected videos                         |
+| `unanswerable` | A question the videos do not answer                           |
+
+## The metrics
+
+Here `k` is how many top results we look at. We report k = 1, 3, 5 and 10.
+
+| Metric          | Plain question                       | How it is calculated                                                                            |
+| --------------- | ------------------------------------ | ----------------------------------------------------------------------------------------------- |
+| **Hit rate@k**  | Is anything correct in the top k?    | 1 if at least one top-k chunk is correct, else 0, averaged over questions                       |
+| **Recall@k**    | Did we find every piece of evidence? | Quotes covered by the top k chunks, divided by the number of quotes                             |
+| **Precision@k** | Is what we returned useful?          | Correct chunks in the top k, divided by k                                                       |
+| **MRR**         | How high is the first correct chunk? | 1 / rank of the first correct chunk, averaged (rank 1 = 1.0, rank 2 = 0.5, rank 4 = 0.25)       |
+| **nDCG@k**      | Is the whole list in a good order?   | Credit for each correct chunk, larger near the top, divided by the credit of a perfect ordering |
+
+Notes on reading them:
+
+- **Recall counts quotes, not chunks.** If two chunks cover the same quote, finding either one finds the evidence. Precision does count chunks.
+- **Best possible precision** is printed next to precision. A question with 2 correct chunks cannot score above 2/5 = 40% at k = 5, so a score near that is close to perfect.
+- **Random guessing** is printed too: the hit rate you would get by picking k chunks at random from the selected videos. The videos are short (12 to 19 chunks), so random guessing already scores high at larger k. A result close to that line means retrieval adds little at that k.
+- **What the model really receives** is reported separately. The app keeps at most 12 chunks and drops any scoring more than 0.12 below the best. The eval checks whether the evidence survives that cut.
+
+## Running it
+
+You need Qdrant running, the eval videos ingested, and `GOOGLE_API_KEY` set in `.env` (the questions are embedded with Gemini).
+
+```bash
+# from the repo root
+npm run eval --workspace server
+
+# or from server/
+npm run eval
+```
+
+The output has these parts:
+
+1. A table of hit rate, recall, precision, nDCG and random guessing at each k, plus MRR.
+2. The same scores grouped by question type.
+3. What the model really receives (evidence recall and chunks kept).
+4. The questions where the first correct chunk was not rank 1.
+5. The top-score gap between answerable and unanswerable questions.
+
+Embedding the questions takes a minute or so because of the free-tier rate limit.
+
+## Checking the labels
+
+A score is only as good as its labels. Before trusting a number, or after editing a question, run the review script from `server/`:
+
+```bash
+npx tsx --env-file=../.env scripts/eval-review.ts          # every question
+npx tsx --env-file=../.env scripts/eval-review.ts q03 q07  # only these
+```
+
+For each question it prints where the answer is and what retrieval returned, with the correct chunks marked:
+
+```
+q03 [fact] What share of CoreWeave's revenue comes from its three biggest customers?
+  GOLD  DRDI0KApHZw 6:11-6:31
+        "three customers made up about 72% of Coreweave's revenue"
+  RETRIEVED 5 chunks:
+    1 GOLD 0.783 DRDI0KApHZw #7 @6:15
+    2 GOLD 0.700 DRDI0KApHZw #6 @5:19
+    3      0.699 DRDI0KApHZw #9 @8:05
+    ...
+  => found 1 of 1 evidence, first correct chunk at rank 1
+```
+
+Read it like marking homework: is the quoted sentence really the answer, and did retrieval find it? The script also counts label problems:
+
+- `NOT FOUND`: the quote does not appear in the stored chunks. Fix the quote.
+- Said in more than one place: the label is ambiguous. Make the quote more specific.
+
+## Adding or editing a question
+
+1. Add an entry to [questions.json](../server/eval/questions.json) with a new unique `id`.
+2. Copy the quote **exactly** from the transcript. Keep it short and self-contained, so it does not straddle a chunk boundary.
+3. Run `eval-review.ts` on the new id and confirm there are no label problems.
+4. Run the full eval.
+
+The file is validated on load ([questions.ts](../server/src/eval/questions.ts)): ids must be unique, `unanswerable` questions have no evidence, every other question needs evidence, and each evidence video must be one of the question's selected videos.
+
+## Baseline
+
+Dense search, recursive chunking (1000 characters, 200 overlap), top-k 12, margin 0.12, 23 answerable questions:
+
+|                            | top 1 | top 3 | top 5 | top 10 |
+| -------------------------- | ----- | ----- | ----- | ------ |
+| Hit rate                   | 74%   | 91%   | 100%  | 100%   |
+| Recall@k                   | 67%   | 81%   | 92%   | 100%   |
+| Precision@k                | 74%   | 49%   | 34%   | 20%    |
+| Best possible precision@k  | 100%  | 68%   | 43%   | 22%    |
+| nDCG@k                     | 74%   | 74%   | 78%   | 83%    |
+| Random guessing (hit rate) | 12%   | 33%   | 51%   | 81%    |
+
+MRR 0.841. Single facts are solved (MRR 1.00). The weak spots are overview questions (MRR 0.375), lists (0.75) and multi-video questions (0.71).
+
+## Limitations
+
+- **The set is small and easy.** 23 answerable questions on three short videos. Differences under about 5 points are noise, and hit rate saturates at k = 5. Longer videos and more questions are the next step.
+- **Overview labels are a judgement call.** "What is the main argument?" has no single correct passage, so those scores say less than the fact scores.
+- **One chunking setup.** The scripts search the `chunks_recursive` collection. Comparing chunking strategies needs a collection per strategy and a way to choose it. The quote labels themselves do not change.
+- **Chunk size is not controlled.** Metrics count chunks, and a top 5 of small chunks gives the model less text than a top 5 of large ones. Compare chunking strategies together with the amount of text sent.
+- **No answer detection by score is fragile.** The best score for unanswerable questions (0.60) is close to the lowest for answerable ones (0.63).
