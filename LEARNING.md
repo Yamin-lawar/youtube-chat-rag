@@ -155,6 +155,21 @@ MRR 0.841. Precision looks low at higher k only because few chunks are correct (
 
 **To try:** a larger pool (more and longer videos in each question) so the high-k numbers stop saturating.
 
+**Eval set v2:** added two long videos (an investor's 72-chunk talk and a 50-chunk interview about AI) and 16 questions, so the set is now 41 questions (37 answerable, 4 unanswerable) on five videos. Some new questions select both long videos, so the search has to pick from 122 chunks. All 16 quotes were found, each in one place.
+
+|                            | top 1 | top 3 | top 5 | top 10 |
+| -------------------------- | ----- | ----- | ----- | ------ |
+| Hit rate                   | 70%   | 92%   | 100%  | 100%   |
+| Recall@k                   | 60%   | 81%   | 91%   | 97%    |
+| Precision@k                | 70%   | 50%   | 36%   | 21%    |
+| Best possible precision@k  | 100%  | 72%   | 48%   | 24%    |
+| nDCG@k                     | 70%   | 72%   | 75%   | 80%    |
+| Random guessing (hit rate) | 9%    | 24%   | 38%   | 62%    |
+
+MRR 0.818 (was 0.841). By type: facts 0.969, paraphrases 0.857, lists 0.850, multi-video 0.617, overview 0.354. Random guessing at top 10 fell from 81% to 62%, but hit rate is still 100% at top 5, because most long-video questions found the answer at rank 1 or 2. The numbers to compare experiments on are top 1, top 3, MRR, nDCG and recall.
+
+Both new unanswerable questions scored higher than the weakest answerable one: 0.670 (cryptocurrency, asked of the investing talk) and 0.669 (quantum computing, asked of the AI interview), against a lowest answerable top score of 0.629. Both questions name the speaker, which matches the video's opening. So the top score cannot say "no answer exists".
+
 ## Open questions
 
 - Does 768 dimensions lose quality compared with 3072?
@@ -162,4 +177,4 @@ MRR 0.841. Precision looks low at higher k only because few chunks are correct (
 - Does hybrid search (dense plus BM25) fix near-ties and exact-term questions?
 - Does a reranker improve the final order of results?
 - Does rewriting from user messages only avoid carrying wrong claims into the search?
-- Can the top score separate answerable from unanswerable questions, or is the gap too narrow?
+- Can anything separate answerable from unanswerable questions? The top score cannot (0.670 for a question the videos do not answer, against 0.629 for the weakest answerable one). Try an LLM check on the retrieved chunks, or the gap between the first and second score.

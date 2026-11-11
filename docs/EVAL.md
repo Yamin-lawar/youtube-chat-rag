@@ -12,7 +12,7 @@ Reading a few answers and deciding they "look fine" cannot show whether a change
 
 ```
  server/eval/questions.json
-   25 questions, each with the answer written as a quote from the transcript
+   41 questions, each with the answer written as a quote from the transcript
               |
               v
  1. Find the quote in the stored chunks  ->  a time range in the video (the "answer key")
@@ -140,23 +140,25 @@ The file is validated on load ([questions.ts](../server/src/eval/questions.ts)):
 
 ## Baseline
 
-Dense search, recursive chunking (1000 characters, 200 overlap), top-k 12, margin 0.12, 23 answerable questions:
+Dense search, recursive chunking (1000 characters, 200 overlap), top-k 12, margin 0.12. 37 answerable and 4 unanswerable questions on five videos (the three short ones plus two long ones, 72 and 50 chunks). The pool for a question is 46.5 chunks on average.
 
 |                            | top 1 | top 3 | top 5 | top 10 |
 | -------------------------- | ----- | ----- | ----- | ------ |
-| Hit rate                   | 74%   | 91%   | 100%  | 100%   |
-| Recall@k                   | 67%   | 81%   | 92%   | 100%   |
-| Precision@k                | 74%   | 49%   | 34%   | 20%    |
-| Best possible precision@k  | 100%  | 68%   | 43%   | 22%    |
-| nDCG@k                     | 74%   | 74%   | 78%   | 83%    |
-| Random guessing (hit rate) | 12%   | 33%   | 51%   | 81%    |
+| Hit rate                   | 70%   | 92%   | 100%  | 100%   |
+| Recall@k                   | 60%   | 81%   | 91%   | 97%    |
+| Precision@k                | 70%   | 50%   | 36%   | 21%    |
+| Best possible precision@k  | 100%  | 72%   | 48%   | 24%    |
+| nDCG@k                     | 70%   | 72%   | 75%   | 80%    |
+| Random guessing (hit rate) | 9%    | 24%   | 38%   | 62%    |
 
-MRR 0.841. Single facts are solved (MRR 1.00). The weak spots are overview questions (MRR 0.375), lists (0.75) and multi-video questions (0.71).
+MRR 0.818. By type: facts 0.969, paraphrases 0.857, lists 0.850, multi-video 0.617, overview 0.354. The chunks the app really sends to the model (9.8 on average) contain 97% of the evidence.
+
+The earlier set of 23 questions on the three short videos scored MRR 0.841, hit rate 74% at top 1, and random guessing 81% at top 10.
 
 ## Limitations
 
-- **The set is small and easy.** 23 answerable questions on three short videos. Differences under about 5 points are noise, and hit rate saturates at k = 5. Longer videos and more questions are the next step.
+- **The set is still small and fairly easy.** 37 answerable questions. Differences under about 5 points are noise. Hit rate is still 100% at top 5, so the numbers that can separate strategies are top 1, top 3, MRR, nDCG and recall at 3 and 5. The long videos added more chunks but most of their questions still found the answer at rank 1 or 2.
 - **Overview labels are a judgement call.** "What is the main argument?" has no single correct passage, so those scores say less than the fact scores.
 - **One chunking setup.** The scripts search the `chunks_recursive` collection. Comparing chunking strategies needs a collection per strategy and a way to choose it. The quote labels themselves do not change.
 - **Chunk size is not controlled.** Metrics count chunks, and a top 5 of small chunks gives the model less text than a top 5 of large ones. Compare chunking strategies together with the amount of text sent.
-- **No answer detection by score is fragile.** The best score for unanswerable questions (0.60) is close to the lowest for answerable ones (0.63).
+- **"No answer" detection by score does not work.** The highest top score among unanswerable questions (0.670) is above the lowest among answerable ones (0.629). The two highest unanswerable scores come from questions that name the speaker ("Howard Marks", "Andrew Ng"), which matches that video's opening even though the topic (cryptocurrency, quantum computing) is never mentioned.
