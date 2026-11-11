@@ -6,6 +6,8 @@ import { EMBEDDING_DIMENSIONS, GeminiEmbedder, type Embedder } from './embedding
 import { createGenerator, createRewriter } from './generation/providers.js';
 import type { Generator } from './generation/types.js';
 import type { QuestionRewriter } from './rewriting/types.js';
+import { createSearch } from './search/createSearch.js';
+import type { SearchStrategy } from './search/types.js';
 import type { TranscriptProvider } from './transcript/types.js';
 import { YoutubeTranscriptProvider } from './transcript/youtubeProvider.js';
 import { QdrantChunkStore } from './vectorstore/qdrantChunkStore.js';
@@ -16,6 +18,7 @@ export interface RagServices {
   chunker: Chunker;
   embedder: Embedder;
   store: QdrantChunkStore;
+  search: SearchStrategy;
   generator: Generator;
   rewriter: QuestionRewriter;
 }
@@ -30,16 +33,19 @@ export function getRagServices(): RagServices {
   if (!services) {
     const keys = { googleApiKey: config.GOOGLE_API_KEY, groqApiKey: config.GROQ_API_KEY };
     const chunker = new RecursiveChunker();
+    const embedder = new GeminiEmbedder(config.GOOGLE_API_KEY);
+    // One collection per chunking strategy, so strategies can be compared later.
+    const store = new QdrantChunkStore(
+      new QdrantClient({ url: config.QDRANT_URL }),
+      `chunks_${chunker.name}`,
+      EMBEDDING_DIMENSIONS,
+    );
     services = {
       transcriptProvider: new YoutubeTranscriptProvider(),
       chunker,
-      embedder: new GeminiEmbedder(config.GOOGLE_API_KEY),
-      // One collection per chunking strategy, so strategies can be compared later.
-      store: new QdrantChunkStore(
-        new QdrantClient({ url: config.QDRANT_URL }),
-        `chunks_${chunker.name}`,
-        EMBEDDING_DIMENSIONS,
-      ),
+      embedder,
+      store,
+      search: createSearch(config.SEARCH_STRATEGY, { embedder, store }),
       generator: createGenerator(keys),
       rewriter: createRewriter(keys),
     };

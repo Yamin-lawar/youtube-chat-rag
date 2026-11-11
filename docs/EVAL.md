@@ -112,6 +112,9 @@ npm run eval --workspace server -- --save-baseline
 # run an experiment and name it; the output ends with a comparison to the baseline
 npm run eval --workspace server -- --label hybrid
 
+# choose the search strategy (dense is the default, set SEARCH_STRATEGY in .env to change the app too)
+npm run eval --workspace server -- --strategy hybrid --label hybrid-v1
+
 # compare against another saved run instead of the baseline
 npm run eval --workspace server -- --against eval/runs/<file>.json
 

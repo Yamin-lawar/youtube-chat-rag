@@ -15,11 +15,8 @@ import { loadQuestions } from '../src/eval/questions.js';
 import type { TimeSpan } from '../src/eval/types.js';
 import { EMBEDDING_DIMENSIONS, GeminiEmbedder } from '../src/rag/embeddings/embedder.js';
 import { formatTimestamp } from '../src/rag/generation/prompt.js';
-import {
-  DEFAULT_MAX_SCORE_DROP,
-  DEFAULT_TOP_K,
-  retrieveChunks,
-} from '../src/rag/retrieval/retriever.js';
+import { DEFAULT_TOP_K, retrieveChunks } from '../src/rag/retrieval/retriever.js';
+import { createSearch } from '../src/rag/search/createSearch.js';
 import { QdrantChunkStore, type ChunkPayload } from '../src/rag/vectorstore/qdrantChunkStore.js';
 
 const wanted = new Set(process.argv.slice(2));
@@ -32,6 +29,8 @@ const store = new QdrantChunkStore(
   EMBEDDING_DIMENSIONS,
 );
 const embedder = new GeminiEmbedder(config.GOOGLE_API_KEY);
+// SEARCH_STRATEGY=hybrid npx tsx ... reviews another strategy.
+const search = createSearch(config.SEARCH_STRATEGY, { embedder, store });
 
 // All stored chunks of the videos used, to look the quotes up in.
 const stored: ChunkPayload[] = [];
@@ -42,7 +41,9 @@ for (const youtubeId of new Set(questions.flatMap((q) => q.youtubeIds))) {
 const range = (s: TimeSpan) => `${formatTimestamp(s.startMs)}-${formatTimestamp(s.endMs)}`;
 let problems = 0;
 
-console.log(`Settings: topK ${DEFAULT_TOP_K}, margin ${DEFAULT_MAX_SCORE_DROP}\n`);
+console.log(
+  `Settings: search ${search.name}, topK ${DEFAULT_TOP_K}, margin ${search.maxScoreDrop}\n`,
+);
 
 for (const q of questions) {
   console.log('='.repeat(78));
@@ -65,7 +66,7 @@ for (const q of questions) {
   }
 
   // 2. What does retrieval return?
-  const kept = await retrieveChunks(q.question, { embedder, store }, { youtubeIds: q.youtubeIds });
+  const kept = await retrieveChunks(q.question, { search }, { youtubeIds: q.youtubeIds });
   console.log(`  RETRIEVED ${kept.length} chunks:`);
   kept.forEach((chunk, i) => {
     const covers = gold.some(({ spans }) => spans.some((span) => chunkCoversSpan(chunk, span)));

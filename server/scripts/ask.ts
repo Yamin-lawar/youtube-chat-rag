@@ -7,6 +7,7 @@ import { EMBEDDING_DIMENSIONS, GeminiEmbedder } from '../src/rag/embeddings/embe
 import { createGenerator } from '../src/rag/generation/providers.js';
 import { buildUserPrompt, formatTimestamp } from '../src/rag/generation/prompt.js';
 import { retrieveChunks } from '../src/rag/retrieval/retriever.js';
+import { createSearch } from '../src/rag/search/createSearch.js';
 import { QdrantChunkStore } from '../src/rag/vectorstore/qdrantChunkStore.js';
 
 const question = process.argv[2];
@@ -24,7 +25,8 @@ const store = new QdrantChunkStore(
 );
 const embedder = new GeminiEmbedder(config.GOOGLE_API_KEY);
 
-const chunks = await retrieveChunks(question, { embedder, store }, { youtubeIds });
+const search = createSearch(config.SEARCH_STRATEGY, { embedder, store });
+const chunks = await retrieveChunks(question, { search }, { youtubeIds });
 
 console.log('--- The prompt sent to Gemini (user message) ---\n');
 console.log(buildUserPrompt(question, chunks));

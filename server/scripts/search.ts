@@ -4,11 +4,8 @@ import { QdrantClient } from '@qdrant/js-client-rest';
 import { RecursiveChunker } from '../src/rag/chunking/recursiveChunker.js';
 import { config } from '../src/config.js';
 import { EMBEDDING_DIMENSIONS, GeminiEmbedder } from '../src/rag/embeddings/embedder.js';
-import {
-  DEFAULT_MAX_SCORE_DROP,
-  DEFAULT_TOP_K,
-  retrieveChunks,
-} from '../src/rag/retrieval/retriever.js';
+import { DEFAULT_TOP_K, retrieveChunks } from '../src/rag/retrieval/retriever.js';
+import { createSearch } from '../src/rag/search/createSearch.js';
 import { QdrantChunkStore } from '../src/rag/vectorstore/qdrantChunkStore.js';
 
 const question = process.argv[2];
@@ -25,19 +22,19 @@ const store = new QdrantChunkStore(
   EMBEDDING_DIMENSIONS,
 );
 const embedder = new GeminiEmbedder(config.GOOGLE_API_KEY);
+// SEARCH_STRATEGY=hybrid npx tsx ... switches the strategy for one run.
+const search = createSearch(config.SEARCH_STRATEGY, { embedder, store });
 
 // Look at a few more candidates than retrieval keeps, so you can see what falls outside it.
 const EXTRA_CANDIDATES = 8;
-const everything = await store.search(
-  await embedder.embedQuery(question),
-  youtubeIds,
-  DEFAULT_TOP_K + EXTRA_CANDIDATES,
-);
-const kept = await retrieveChunks(question, { embedder, store }, { youtubeIds });
+const everything = await search.search(question, youtubeIds, DEFAULT_TOP_K + EXTRA_CANDIDATES);
+const kept = await retrieveChunks(question, { search }, { youtubeIds });
 
 console.log(`Question: ${question}`);
 console.log(`Videos:   ${youtubeIds.join(', ')}`);
-console.log(`Settings: topK ${DEFAULT_TOP_K}, margin ${DEFAULT_MAX_SCORE_DROP}\n`);
+console.log(
+  `Settings: search ${search.name}, topK ${DEFAULT_TOP_K}, margin ${search.maxScoreDrop}\n`,
+);
 
 for (const chunk of everything) {
   const isKept = kept.some(

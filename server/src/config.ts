@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { SEARCH_STRATEGIES } from './rag/search/types.js';
 
 // Validate environment variables once at startup so a missing or malformed
 // value fails immediately with a clear message instead of crashing later.
@@ -11,6 +12,8 @@ const envSchema = z.object({
   GOOGLE_API_KEY: z.string().optional(),
   // Optional answer-generation fallback, used when Gemini is overloaded. Free key: console.groq.com
   GROQ_API_KEY: z.string().optional(),
+  // How chunks are found for a question. See src/rag/search.
+  SEARCH_STRATEGY: z.enum(SEARCH_STRATEGIES).default('dense'),
 });
 
 const parsed = envSchema.safeParse(process.env);

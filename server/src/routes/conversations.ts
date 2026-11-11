@@ -172,7 +172,7 @@ conversationsRouter.post('/:id/messages', async (req, res) => {
 
   // Built before anything is saved, so a missing API key is a clean error and does not leave
   // an answer stuck in "streaming".
-  const { embedder, store, generator, rewriter } = getRagServices();
+  const { search, generator, rewriter } = getRagServices();
 
   // The earlier messages, read before the new question is saved so it is not in its own history.
   // Only finished messages count: a failed or half-written answer would only confuse the rewrite.
@@ -214,7 +214,7 @@ conversationsRouter.post('/:id/messages', async (req, res) => {
     { question, youtubeIds, history },
     {
       rewriter,
-      retrieve: (q, ids) => retrieveChunks(q, { embedder, store }, { youtubeIds: ids }),
+      retrieve: (q, ids) => retrieveChunks(q, { search }, { youtubeIds: ids }),
       generator,
       saveMessage: async ({ sources, ...patch }) => {
         await prisma.message.update({

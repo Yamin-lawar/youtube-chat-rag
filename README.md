@@ -66,6 +66,7 @@ Retrieval is scored on a fixed question set (hit rate, recall, precision, nDCG, 
 ```bash
 npm run eval --workspace server                                  # score retrieval, compare with the baseline
 npm run eval --workspace server -- --label hybrid                # name the run
+npm run eval --workspace server -- --strategy hybrid             # search strategy: dense (default) or hybrid
 npm run eval --workspace server -- --save-baseline               # keep this run as the one to beat
 npm run eval --workspace server -- --against eval/runs/<file>.json   # compare with another saved run
 npm run eval:compare --workspace server -- <before.json> <after.json>  # compare any two saved runs

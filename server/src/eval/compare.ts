@@ -78,10 +78,14 @@ const describe = (run: RunRecord) =>
   `"${run.label}" (${run.createdAt.slice(0, 10)}${run.commit ? `, commit ${run.commit}` : ''})`;
 const rank = (value: number | null) => (value === null ? 'none' : String(value));
 
+// A setting missing from an older file shows as "unknown" instead of "undefined".
+const showSetting = (value: string | number | null | undefined) =>
+  value === null ? 'none' : value === undefined ? 'unknown' : String(value);
+
 function settingChanges(before: RunSettings, after: RunSettings): string[] {
   return (Object.keys(after) as (keyof RunSettings)[])
     .filter((key) => before[key] !== after[key])
-    .map((key) => `${key} ${String(before[key])} -> ${String(after[key])}`);
+    .map((key) => `${key} ${showSetting(before[key])} -> ${showSetting(after[key])}`);
 }
 
 /** The comparison as text for the terminal. Each cell shows the new value and the change in points. */

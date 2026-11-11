@@ -1,9 +1,10 @@
 {
   "version": 1,
   "label": "baseline",
-  "createdAt": "2026-11-11T13:18:17.066Z",
-  "commit": "a350f57",
+  "createdAt": "2026-11-11T13:23:14.006Z",
+  "commit": "5c1b321",
   "settings": {
+    "search": "dense",
     "topK": 12,
     "maxScoreDrop": 0.12,
     "chunking": "recursive"

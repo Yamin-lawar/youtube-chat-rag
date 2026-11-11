@@ -29,7 +29,7 @@ const question = (id: string, firstRank: number | null): ScoredQuestion => ({
   keptCount: 8,
 });
 
-const settings = { topK: 12, maxScoreDrop: 0.12, chunking: 'recursive' };
+const settings = { search: 'dense', topK: 12, maxScoreDrop: 0.12, chunking: 'recursive' };
 const run = (label: string, ranks: Record<string, number | null>) =>
   buildRunRecord(
     { label, commit: null, settings, now: new Date('2026-01-01T00:00:00Z') },
@@ -72,11 +72,15 @@ describe('compareRuns', () => {
 describe('formatComparison', () => {
   it('shows the change in points and the settings that differ', () => {
     const before = run('baseline', { q1: 2, q2: 2 });
-    const after = { ...run('hybrid', { q1: 1, q2: 2 }), settings: { ...settings, topK: 8 } };
+    const after = {
+      ...run('hybrid', { q1: 1, q2: 2 }),
+      settings: { ...settings, search: 'hybrid', maxScoreDrop: null },
+    };
     const text = formatComparison(compareRuns(before, after));
 
     expect(text).toContain('"baseline"');
-    expect(text).toContain('topK 12 -> 8');
+    expect(text).toContain('search dense -> hybrid');
+    expect(text).toContain('maxScoreDrop 0.12 -> none');
     expect(text).toContain('50% (+50)'); // hit rate at top 1 went from 0% to 50%
     expect(text).toContain('MRR 0.500 -> 0.750 (+0.250)');
   });

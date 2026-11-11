@@ -3,6 +3,7 @@
 //   npm run eval --workspace server
 //   npm run eval --workspace server -- --label hybrid      name the run
 //   npm run eval --workspace server -- --save-baseline     keep this run as the one to beat
+//   npm run eval --workspace server -- --strategy hybrid   dense (default) or hybrid
 //   (or) npx tsx --env-file=../.env scripts/eval.ts
 //
 // Every run is saved in eval/runs/ and compared with eval/baseline.json (use --against <file>
@@ -26,11 +27,9 @@ import { buildRunRecord } from '../src/eval/runRecord.js';
 import { currentCommit, loadRun, saveRun, writeRun } from '../src/eval/runStore.js';
 import type { EvalQuestion } from '../src/eval/types.js';
 import { EMBEDDING_DIMENSIONS, GeminiEmbedder } from '../src/rag/embeddings/embedder.js';
-import {
-  DEFAULT_MAX_SCORE_DROP,
-  DEFAULT_TOP_K,
-  keepNearBest,
-} from '../src/rag/retrieval/retriever.js';
+import { DEFAULT_TOP_K, keepNearBest } from '../src/rag/retrieval/retriever.js';
+import { createSearch } from '../src/rag/search/createSearch.js';
+import { SEARCH_STRATEGIES, type SearchStrategyName } from '../src/rag/search/types.js';
 import { QdrantChunkStore, type ChunkPayload } from '../src/rag/vectorstore/qdrantChunkStore.js';
 
 const { values: args } = parseArgs({
@@ -38,8 +37,15 @@ const { values: args } = parseArgs({
     label: { type: 'string', default: 'run' },
     'save-baseline': { type: 'boolean', default: false },
     against: { type: 'string' },
+    strategy: { type: 'string' },
   },
 });
+
+const strategyName = (args.strategy ?? config.SEARCH_STRATEGY) as SearchStrategyName;
+if (!SEARCH_STRATEGIES.includes(strategyName)) {
+  console.error(`Unknown strategy "${strategyName}". Use one of: ${SEARCH_STRATEGIES.join(', ')}`);
+  process.exit(1);
+}
 const evalDir = new URL('../eval/', import.meta.url).pathname;
 const baselinePath = `${evalDir}baseline.json`;
 
@@ -51,6 +57,7 @@ const store = new QdrantChunkStore(
   EMBEDDING_DIMENSIONS,
 );
 const embedder = new GeminiEmbedder(config.GOOGLE_API_KEY);
+const search = createSearch(strategyName, { embedder, store });
 
 const stored: ChunkPayload[] = [];
 for (const youtubeId of new Set(questions.flatMap((q) => q.youtubeIds))) {
@@ -74,8 +81,8 @@ const unanswerableTopScores: number[] = [];
 for (const question of questions) {
   // Same call as the app's retrieval, but we keep the whole ranked list (no margin) so that
   // recall@1, @3, @5 mean what they say. The margin is judged separately, below.
-  const ranked = await store.search(
-    await embedder.embedQuery(question.question),
+  const ranked = await search.search(
+    question.question,
     question.youtubeIds,
     Math.max(DEFAULT_TOP_K, ...CUTOFFS),
   );
@@ -97,7 +104,7 @@ for (const question of questions) {
     evidence.some((passage) => passage.some((span) => chunkCoversSpan(chunk, span))),
   ).length;
 
-  const kept = keepNearBest(ranked.slice(0, DEFAULT_TOP_K), DEFAULT_MAX_SCORE_DROP);
+  const kept = keepNearBest(ranked.slice(0, DEFAULT_TOP_K), search.maxScoreDrop);
 
   answerable.push({
     question,
@@ -117,7 +124,7 @@ console.log(
   `\nRetrieval eval: ${answerable.length} answerable questions, ${unanswerableTopScores.length} unanswerable`,
 );
 console.log(
-  `Settings: topK ${DEFAULT_TOP_K}, margin ${DEFAULT_MAX_SCORE_DROP}, chunking recursive 1000/200\n`,
+  `Settings: search ${search.name}, topK ${DEFAULT_TOP_K}, margin ${search.maxScoreDrop}, chunking recursive 1000/200\n`,
 );
 
 const atEachK = (pick: (r: Result, k: number) => number) =>
@@ -210,8 +217,10 @@ const record = buildRunRecord(
     label: args['save-baseline'] ? 'baseline' : (args.label ?? 'run'),
     commit: currentCommit(),
     settings: {
+      search: search.name,
       topK: DEFAULT_TOP_K,
-      maxScoreDrop: DEFAULT_MAX_SCORE_DROP,
+      // JSON cannot store Infinity, so "no margin" is saved as null.
+      maxScoreDrop: Number.isFinite(search.maxScoreDrop) ? search.maxScoreDrop : null,
       chunking: new RecursiveChunker().name,
     },
   },

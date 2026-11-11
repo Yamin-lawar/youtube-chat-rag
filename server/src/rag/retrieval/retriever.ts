@@ -1,5 +1,5 @@
-import type { Embedder } from '../embeddings/embedder.js';
-import type { QdrantChunkStore, ScoredChunk } from '../vectorstore/qdrantChunkStore.js';
+import type { SearchStrategy } from '../search/types.js';
+import type { ScoredChunk } from '../vectorstore/qdrantChunkStore.js';
 
 // How many candidates to ask Qdrant for before the cutoff removes weak ones. Raised from 8:
 // questions such as "which companies are mentioned" are answered by many passages, and the
@@ -30,13 +30,16 @@ export function keepNearBest(chunks: ScoredChunk[], maxScoreDrop: number): Score
   return chunks.filter((chunk) => best.score - chunk.score <= maxScoreDrop);
 }
 
-/** The retrieval step: question -> embedding -> nearest chunks of the chosen videos. */
+/**
+ * The retrieval step: question -> the search strategy's best chunks of the chosen videos ->
+ * drop the weak ones. The margin defaults to the strategy's own, because scores from different
+ * strategies are not on the same scale.
+ */
 export async function retrieveChunks(
   question: string,
-  { embedder, store }: { embedder: Embedder; store: QdrantChunkStore },
-  { youtubeIds, topK = DEFAULT_TOP_K, maxScoreDrop = DEFAULT_MAX_SCORE_DROP }: RetrieveOptions,
+  { search }: { search: SearchStrategy },
+  { youtubeIds, topK = DEFAULT_TOP_K, maxScoreDrop = search.maxScoreDrop }: RetrieveOptions,
 ): Promise<ScoredChunk[]> {
-  const questionVector = await embedder.embedQuery(question);
-  const candidates = await store.search(questionVector, youtubeIds, topK);
+  const candidates = await search.search(question, youtubeIds, topK);
   return keepNearBest(candidates, maxScoreDrop);
 }

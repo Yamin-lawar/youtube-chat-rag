@@ -14,8 +14,11 @@ export const METRIC_LABELS: Record<MetricName, string> = {
 
 /** The knobs that change the numbers. Shown in a comparison so you know what you changed. */
 export interface RunSettings {
+  /** The search strategy: "dense" or "hybrid". */
+  search: string;
   topK: number;
-  maxScoreDrop: number;
+  /** Null when there is no margin and everything the search returns is kept. */
+  maxScoreDrop: number | null;
   chunking: string;
 }
 

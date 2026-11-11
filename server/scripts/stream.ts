@@ -6,6 +6,7 @@ import { config } from '../src/config.js';
 import { EMBEDDING_DIMENSIONS, GeminiEmbedder } from '../src/rag/embeddings/embedder.js';
 import { createGenerator } from '../src/rag/generation/providers.js';
 import { retrieveChunks } from '../src/rag/retrieval/retriever.js';
+import { createSearch } from '../src/rag/search/createSearch.js';
 import { QdrantChunkStore } from '../src/rag/vectorstore/qdrantChunkStore.js';
 
 const question = process.argv[2];
@@ -27,7 +28,8 @@ const generator = createGenerator({
   groqApiKey: config.GROQ_API_KEY,
 });
 
-const chunks = await retrieveChunks(question, { embedder, store }, { youtubeIds });
+const search = createSearch(config.SEARCH_STRATEGY, { embedder, store });
+const chunks = await retrieveChunks(question, { search }, { youtubeIds });
 
 const startedAt = Date.now();
 const answer = await generator.stream(question, chunks);
