@@ -2,8 +2,10 @@ services:
   qdrant:
     image: qdrant/qdrant:v1.20.0
     ports:
-      - '6333:6333' # REST API + dashboard (http://localhost:6333/dashboard)
-      - '6334:6334' # gRPC
+      # The host ports can be changed in .env (QDRANT_PORT, QDRANT_GRPC_PORT) if another Qdrant
+      # already uses 6333 and 6334. Set QDRANT_URL to match.
+      - '${QDRANT_PORT:-6333}:6333' # REST API + dashboard (http://localhost:6333/dashboard)
+      - '${QDRANT_GRPC_PORT:-6334}:6334' # gRPC
     volumes:
       - qdrant_data:/qdrant/storage
 

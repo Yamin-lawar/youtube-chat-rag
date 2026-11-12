@@ -98,7 +98,7 @@ One script per pipeline block, for looking at what each step produces. Run from 
 
 The id is optional for the first four scripts, which default to a sample video. `rewrite` with no arguments runs a few built-in examples. In its arguments the first text is the question, and the rest are earlier messages, oldest first, starting with `u:` for a user message or `a:` for an assistant message.
 
-Qdrant has a dashboard at http://localhost:6333/dashboard.
+Qdrant has a dashboard at http://localhost:6333/dashboard (use your `QDRANT_PORT` if you changed it in `.env`).
 
 ## Project plan
 
