@@ -11,15 +11,31 @@ export const RRF_K = 60;
  * one list and missing from the other. Only the rank is used, never the score, which is why it
  * can merge cosine scores and keyword scores that are not comparable.
  *
- * Chunks are the same when `youtubeId` and `chunkIndex` match. The returned `score` is the
- * summed points, and the list is sorted best first and cut to `limit`.
+ *   dense list:   A, B, C        sparse list:   C, A
+ *   A: 1/61 + 1/62 = 0.0325      B: 1/62 = 0.0161      C: 1/63 + 1/61 = 0.0323
+ *   fused:        A, C, B
  *
- * TODO(you): write this, then the tests in rrf.test.ts.
+ * Chunks are the same when `youtubeId` and `chunkIndex` match. The returned `score` is the
+ * summed points, and the list is sorted best first and cut to `limit`. When two chunks end up
+ * with the same points, the one seen first (earlier list, higher rank) comes first. Each input
+ * list is expected to hold a chunk at most once.
  */
 export function reciprocalRankFusion(
-  _rankings: ScoredChunk[][],
-  _limit: number,
-  _k: number = RRF_K,
+  rankings: ScoredChunk[][],
+  limit: number,
+  k: number = RRF_K,
 ): ScoredChunk[] {
-  throw new Error('reciprocalRankFusion is not written yet.');
+  const fused = new Map<string, ScoredChunk>();
+
+  for (const ranking of rankings) {
+    ranking.forEach((chunk, index) => {
+      const key = `${chunk.youtubeId}:${chunk.chunkIndex}`;
+      const points = 1 / (k + index + 1);
+      const seen = fused.get(key);
+      // The first copy supplies the text and times, and the score becomes the running total.
+      fused.set(key, { ...(seen ?? chunk), score: (seen?.score ?? 0) + points });
+    });
+  }
+
+  return [...fused.values()].sort((a, b) => b.score - a.score).slice(0, limit);
 }
