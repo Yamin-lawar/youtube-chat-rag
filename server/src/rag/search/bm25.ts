@@ -61,27 +61,67 @@ export function tokenize(text: string): string[] {
 }
 
 /**
- * Turns a chunk's text into the sparse vector that is stored with it.
+ * Turns a word into the number Qdrant needs as its position in a sparse vector (a 32-bit
+ * unsigned integer). It is a hash of the word, so the same word always gets the same number
+ * without keeping a vocabulary file, and chunks stored today still match questions asked later.
  *
- * Each word gets a weight that grows with how often it appears in the chunk, but flattens out
- * (BM25_K1) and is corrected for chunk length (BM25_B, `averageLength`). The rarity of a word
- * across all chunks (IDF) is NOT applied here: Qdrant does that when the sparse vector is
- * configured with the `idf` modifier, so the client only sends the within-chunk part.
- *
- * Words must become numbers for Qdrant. Use a stable hash of the word, so the same word always
- * gets the same number without keeping a vocabulary file.
- *
- * TODO(you): write this.
+ * The hash is FNV-1a: a few lines, no dependency, and spread out well enough for this. Two
+ * different words can in theory get the same number. With the few thousand distinct words in
+ * a handful of videos that is very unlikely, and the effect would be one word counting slightly
+ * for another.
  */
-export function documentVector(_text: string, _averageLength: number): SparseVector {
-  throw new Error('documentVector is not written yet.');
+export function wordIndex(word: string): number {
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < word.length; i++) {
+    hash ^= word.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return hash >>> 0;
 }
 
 /**
- * Turns a question into a sparse vector: every distinct word counts 1.
+ * Turns a chunk's text into the sparse vector that is stored with it.
  *
- * TODO(you): write this.
+ * Each word gets this BM25 weight:
+ *
+ *                 tf * (k1 + 1)
+ *   weight = ---------------------------------------
+ *             tf + k1 * (1 - b + b * length / average)
+ *
+ * - `tf` is how many times the word appears in the chunk. More is better, but the weight levels
+ *   off below k1 + 1 (2.2), so saying "debt" ten times is not ten times better than twice.
+ * - `length` is the number of words in the chunk and `averageLength` the typical number across
+ *   chunks. A chunk longer than average is penalised and a shorter one helped, because a long
+ *   chunk contains many words by chance. `b` sets how strong that correction is.
+ *   A word that appears once in an average-length chunk weighs exactly 1.
+ *
+ * The rarity of a word across all chunks (IDF) is NOT applied here: Qdrant does that when the
+ * sparse vector is configured with the `idf` modifier, so the client only sends this part.
  */
-export function queryVector(_question: string): SparseVector {
-  throw new Error('queryVector is not written yet.');
+export function documentVector(text: string, averageLength: number): SparseVector {
+  if (!(averageLength > 0)) {
+    throw new RangeError(`averageLength must be greater than 0, got ${averageLength}`);
+  }
+
+  const words = tokenize(text);
+  const counts = new Map<string, number>();
+  for (const word of words) counts.set(word, (counts.get(word) ?? 0) + 1);
+
+  const lengthFactor = 1 - BM25_B + (BM25_B * words.length) / averageLength;
+  const vector: SparseVector = { indices: [], values: [] };
+  for (const [word, tf] of counts) {
+    vector.indices.push(wordIndex(word));
+    vector.values.push((tf * (BM25_K1 + 1)) / (tf + BM25_K1 * lengthFactor));
+  }
+  return vector;
+}
+
+/**
+ * Turns a question into a sparse vector: every distinct word counts 1. Repeating a word in the
+ * question does not make it matter more. Qdrant multiplies each matching word's weight in a chunk
+ * by this 1 (and by the word's IDF), then adds them up to score the chunk.
+ */
+export function queryVector(question: string): SparseVector {
+  const distinct = [...new Set(tokenize(question))];
+  return { indices: distinct.map(wordIndex), values: distinct.map(() => 1) };
 }
