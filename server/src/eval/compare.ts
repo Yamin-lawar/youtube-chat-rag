@@ -74,18 +74,28 @@ export function compareRuns(before: RunRecord, after: RunRecord): Comparison {
 
 const points = (value: number) => Math.round(value * 100);
 const signed = (n: number, digits = 0) => (n > 0 ? `+${n.toFixed(digits)}` : n.toFixed(digits));
-const describe = (run: RunRecord) =>
-  `"${run.label}" (${run.createdAt.slice(0, 10)}${run.commit ? `, commit ${run.commit}` : ''})`;
+const describe = (run: RunRecord) => {
+  const { search, sparseWeight } = run.settings;
+  const how = search && sparseWeight !== undefined ? `${search} ${sparseWeight}` : search;
+  const parts = [how, run.createdAt.slice(0, 10), run.commit && `commit ${run.commit}`];
+  return `"${run.label}" (${parts.filter(Boolean).join(', ')})`;
+};
 const rank = (value: number | null) => (value === null ? 'none' : String(value));
 
 // A setting missing from an older file shows as "unknown" instead of "undefined".
 const showSetting = (value: string | number | null | undefined) =>
   value === null ? 'none' : value === undefined ? 'unknown' : String(value);
 
+// Only hybrid runs have a sparse weight, so "missing" there means "does not apply", not "unknown".
 function settingChanges(before: RunSettings, after: RunSettings): string[] {
-  return (Object.keys(after) as (keyof RunSettings)[])
+  const keys = new Set([...Object.keys(before), ...Object.keys(after)]) as Set<keyof RunSettings>;
+  return [...keys]
     .filter((key) => before[key] !== after[key])
-    .map((key) => `${key} ${showSetting(before[key])} -> ${showSetting(after[key])}`);
+    .map((key) => {
+      const show = (settings: RunSettings) =>
+        key === 'sparseWeight' && settings[key] === undefined ? 'none' : showSetting(settings[key]);
+      return `${key} ${show(before)} -> ${show(after)}`;
+    });
 }
 
 /** The comparison as text for the terminal. Each cell shows the new value and the change in points. */

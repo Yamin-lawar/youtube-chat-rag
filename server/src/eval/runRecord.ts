@@ -20,6 +20,8 @@ export interface RunSettings {
   /** Null when there is no margin and everything the search returns is kept. */
   maxScoreDrop: number | null;
   chunking: string;
+  /** Hybrid only: the weight of the exact-word list against the meaning list (1). */
+  sparseWeight?: number;
 }
 
 export interface QuestionResult {

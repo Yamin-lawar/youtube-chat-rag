@@ -115,6 +115,9 @@ npm run eval --workspace server -- --label hybrid
 # choose the search strategy (dense is the default, set SEARCH_STRATEGY in .env to change the app too)
 npm run eval --workspace server -- --strategy hybrid --label hybrid-v1
 
+# hybrid with the exact-word list counting less than the meaning list (default 1, 0 = same as dense)
+npm run eval --workspace server -- --strategy hybrid --sparse-weight 0.3 --label hybrid-w0.3
+
 # compare against another saved run instead of the baseline
 npm run eval --workspace server -- --against eval/runs/<file>.json
 

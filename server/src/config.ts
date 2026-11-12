@@ -14,6 +14,8 @@ const envSchema = z.object({
   GROQ_API_KEY: z.string().optional(),
   // How chunks are found for a question. See src/rag/search.
   SEARCH_STRATEGY: z.enum(SEARCH_STRATEGIES).default('dense'),
+  // Hybrid only: how much the exact-word list counts compared with the meaning list (1).
+  HYBRID_SPARSE_WEIGHT: z.coerce.number().min(0).default(1),
 });
 
 const parsed = envSchema.safeParse(process.env);

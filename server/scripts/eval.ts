@@ -4,6 +4,7 @@
 //   npm run eval --workspace server -- --label hybrid      name the run
 //   npm run eval --workspace server -- --save-baseline     keep this run as the one to beat
 //   npm run eval --workspace server -- --strategy hybrid   dense (default) or hybrid
+//   npm run eval --workspace server -- --strategy hybrid --sparse-weight 0.5   hybrid, keyword list counts half
 //   (or) npx tsx --env-file=../.env scripts/eval.ts
 //
 // Every run is saved in eval/runs/ and compared with eval/baseline.json (use --against <file>
@@ -38,12 +39,22 @@ const { values: args } = parseArgs({
     'save-baseline': { type: 'boolean', default: false },
     against: { type: 'string' },
     strategy: { type: 'string' },
+    'sparse-weight': { type: 'string' },
   },
 });
 
 const strategyName = (args.strategy ?? config.SEARCH_STRATEGY) as SearchStrategyName;
 if (!SEARCH_STRATEGIES.includes(strategyName)) {
   console.error(`Unknown strategy "${strategyName}". Use one of: ${SEARCH_STRATEGIES.join(', ')}`);
+  process.exit(1);
+}
+const sparseWeight = args['sparse-weight']
+  ? Number(args['sparse-weight'])
+  : config.HYBRID_SPARSE_WEIGHT;
+if (!Number.isFinite(sparseWeight) || sparseWeight < 0) {
+  console.error(
+    `--sparse-weight must be a number that is 0 or more, got "${args['sparse-weight']}"`,
+  );
   process.exit(1);
 }
 const evalDir = new URL('../eval/', import.meta.url).pathname;
@@ -57,7 +68,7 @@ const store = new QdrantChunkStore(
   EMBEDDING_DIMENSIONS,
 );
 const embedder = new GeminiEmbedder(config.GOOGLE_API_KEY);
-const search = createSearch(strategyName, { embedder, store });
+const search = createSearch(strategyName, { embedder, store, sparseWeight });
 
 const stored: ChunkPayload[] = [];
 for (const youtubeId of new Set(questions.flatMap((q) => q.youtubeIds))) {
@@ -124,7 +135,7 @@ console.log(
   `\nRetrieval eval: ${answerable.length} answerable questions, ${unanswerableTopScores.length} unanswerable`,
 );
 console.log(
-  `Settings: search ${search.name}, topK ${DEFAULT_TOP_K}, margin ${search.maxScoreDrop}, chunking recursive 1000/200\n`,
+  `Settings: search ${search.name}${search.name === 'hybrid' ? ` (sparse weight ${sparseWeight})` : ''}, topK ${DEFAULT_TOP_K}, margin ${search.maxScoreDrop}, chunking recursive 1000/200\n`,
 );
 
 const atEachK = (pick: (r: Result, k: number) => number) =>
@@ -222,6 +233,7 @@ const record = buildRunRecord(
       // JSON cannot store Infinity, so "no margin" is saved as null.
       maxScoreDrop: Number.isFinite(search.maxScoreDrop) ? search.maxScoreDrop : null,
       chunking: new RecursiveChunker().name,
+      ...(search.name === 'hybrid' ? { sparseWeight } : {}),
     },
   },
   answerable.map((r) => ({

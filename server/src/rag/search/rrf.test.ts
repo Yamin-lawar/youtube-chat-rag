@@ -18,7 +18,7 @@ describe('reciprocalRankFusion', () => {
   });
 
   it('uses the k it is given', () => {
-    const [only] = reciprocalRankFusion([[chunk(1)]], 10, 10);
+    const [only] = reciprocalRankFusion([[chunk(1)]], 10, { k: 10 });
     expect(only?.score).toBeCloseTo(1 / 11);
   });
 
@@ -78,5 +78,50 @@ describe('reciprocalRankFusion', () => {
     const list = [chunk(1, 0.5), chunk(2, 0.4)];
     reciprocalRankFusion([list], 10);
     expect(list.map((c) => c.score)).toEqual([0.5, 0.4]);
+  });
+
+  describe('weights', () => {
+    it('multiplies the points a list gives', () => {
+      const [only] = reciprocalRankFusion([[chunk(1)], [chunk(1)]], 10, { weights: [1, 0.5] });
+      expect(only?.score).toBeCloseTo(1 / (RRF_K + 1) + 0.5 / (RRF_K + 1));
+    });
+
+    it('lets the heavier list win a disagreement', () => {
+      const dense = [chunk(1)];
+      const sparse = [chunk(2)];
+      expect(indexes(reciprocalRankFusion([dense, sparse], 10, { weights: [1, 0.5] }))).toEqual([
+        1, 2,
+      ]);
+      expect(indexes(reciprocalRankFusion([dense, sparse], 10, { weights: [0.5, 1] }))).toEqual([
+        2, 1,
+      ]);
+    });
+
+    it('gives the same result as no weights when every weight is 1', () => {
+      const lists = [
+        [chunk(1), chunk(2)],
+        [chunk(3), chunk(2)],
+      ];
+      expect(reciprocalRankFusion(lists, 10, { weights: [1, 1] })).toEqual(
+        reciprocalRankFusion(lists, 10),
+      );
+    });
+
+    it('keeps the order of a list when the other list has weight 0', () => {
+      const dense = [chunk(1), chunk(2), chunk(3)];
+      const sparse = [chunk(3), chunk(9)];
+      expect(indexes(reciprocalRankFusion([dense, sparse], 3, { weights: [1, 0] }))).toEqual([
+        1, 2, 3,
+      ]);
+    });
+
+    it('refuses a wrong number of weights, a negative weight and a weight that is not a number', () => {
+      const lists = [[chunk(1)], [chunk(2)]];
+      expect(() => reciprocalRankFusion(lists, 10, { weights: [1] })).toThrow(RangeError);
+      expect(() => reciprocalRankFusion(lists, 10, { weights: [1, -1] })).toThrow(RangeError);
+      expect(() => reciprocalRankFusion(lists, 10, { weights: [1, Number.NaN] })).toThrow(
+        RangeError,
+      );
+    });
   });
 });

@@ -16,7 +16,7 @@ function chunk(chunkIndex: number): ScoredChunk {
 }
 
 /** Fake store and embedder that return fixed lists and remember how they were called. */
-function setup(dense: number[], sparse: number[]) {
+function setup(dense: number[], sparse: number[], sparseWeight?: number) {
   const calls = { dense: [] as unknown[][], sparse: [] as unknown[][], embedded: [] as string[] };
   const embedder = {
     embedQuery: (text: string) => {
@@ -34,7 +34,7 @@ function setup(dense: number[], sparse: number[]) {
       return Promise.resolve(sparse.map(chunk));
     },
   } as unknown as QdrantChunkStore;
-  return { search: new HybridSearch(embedder, store), calls };
+  return { search: new HybridSearch(embedder, store, sparseWeight), calls };
 }
 
 const indexes = (chunks: ScoredChunk[]) => chunks.map((c) => c.chunkIndex);
@@ -84,5 +84,25 @@ describe('HybridSearch', () => {
   it('keeps every chunk it returns, because its scores are not cosine scores', () => {
     const { search } = setup([], []);
     expect(search.maxScoreDrop).toBe(Number.POSITIVE_INFINITY);
+  });
+
+  describe('sparse weight', () => {
+    it('gives exactly the dense order when the weight is 0', async () => {
+      const { search } = setup([4, 3, 2, 1], [1, 2, 3, 9], 0);
+      expect(indexes(await search.search('q', ['abc123DEF45'], 4))).toEqual([4, 3, 2, 1]);
+    });
+
+    it('can push a keyword-only chunk below a meaning-only chunk at a lower weight', async () => {
+      // Sparse rank 1 chunk 6 against dense rank 2 chunk 7: 1.0/61 beats 1/62, 0.5/61 does not.
+      const full = setup([5, 7], [6], 1);
+      const half = setup([5, 7], [6], 0.5);
+      expect(indexes(await full.search.search('q', ['abc123DEF45'], 10))).toEqual([5, 6, 7]);
+      expect(indexes(await half.search.search('q', ['abc123DEF45'], 10))).toEqual([5, 7, 6]);
+    });
+
+    it('refuses a negative or non-numeric weight', () => {
+      expect(() => setup([], [], -1)).toThrow(RangeError);
+      expect(() => setup([], [], Number.NaN)).toThrow(RangeError);
+    });
   });
 });

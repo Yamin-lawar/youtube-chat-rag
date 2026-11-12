@@ -45,7 +45,11 @@ export function getRagServices(): RagServices {
       chunker,
       embedder,
       store,
-      search: createSearch(config.SEARCH_STRATEGY, { embedder, store }),
+      search: createSearch(config.SEARCH_STRATEGY, {
+        embedder,
+        store,
+        sparseWeight: config.HYBRID_SPARSE_WEIGHT,
+      }),
       generator: createGenerator(keys),
       rewriter: createRewriter(keys),
     };

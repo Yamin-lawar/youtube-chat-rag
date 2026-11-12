@@ -30,7 +30,11 @@ const store = new QdrantChunkStore(
 );
 const embedder = new GeminiEmbedder(config.GOOGLE_API_KEY);
 // SEARCH_STRATEGY=hybrid npx tsx ... reviews another strategy.
-const search = createSearch(config.SEARCH_STRATEGY, { embedder, store });
+const search = createSearch(config.SEARCH_STRATEGY, {
+  embedder,
+  store,
+  sparseWeight: config.HYBRID_SPARSE_WEIGHT,
+});
 
 // All stored chunks of the videos used, to look the quotes up in.
 const stored: ChunkPayload[] = [];

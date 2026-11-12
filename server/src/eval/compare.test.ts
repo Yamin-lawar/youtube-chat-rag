@@ -84,4 +84,30 @@ describe('formatComparison', () => {
     expect(text).toContain('50% (+50)'); // hit rate at top 1 went from 0% to 50%
     expect(text).toContain('MRR 0.500 -> 0.750 (+0.250)');
   });
+
+  it('names the search strategy of both runs in the header, so a dense run is not taken for hybrid', () => {
+    const before = run('baseline', { q1: 1 });
+    const after = {
+      ...run('weighted', { q1: 1 }),
+      settings: { ...settings, search: 'hybrid', sparseWeight: 0.5 },
+    };
+    const lines = formatComparison(compareRuns(before, after)).split('\n');
+
+    expect(lines[0]).toContain('(dense, 2026-01-01');
+    expect(lines[1]).toContain('(hybrid 0.5, 2026-01-01');
+  });
+
+  it('shows a sparse weight that only one run has as "none" on the other side', () => {
+    const before = run('baseline', { q1: 1 });
+    const after = {
+      ...run('weighted', { q1: 1 }),
+      settings: { ...settings, search: 'hybrid', sparseWeight: 0.5 },
+    };
+    expect(formatComparison(compareRuns(before, after))).toContain('sparseWeight none -> 0.5');
+  });
+
+  it('reports no changed settings for two dense runs', () => {
+    const text = formatComparison(compareRuns(run('a', { q1: 1 }), run('b', { q1: 1 })));
+    expect(text).toContain('Settings changed: none');
+  });
 });
