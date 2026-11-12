@@ -95,6 +95,7 @@ One script per pipeline block, for looking at what each step produces. Run from 
 | `ask`                | Retrieval plus the generated answer                      | `npx tsx --env-file=../.env scripts/ask.ts "your question" <id>`                                                              |
 | `stream`             | The answer arriving token by token                       | `npx tsx --env-file=../.env scripts/stream.ts "your question" <id>`                                                           |
 | `rewrite`            | A follow-up question turned into a standalone one        | `npx tsx --env-file=../.env scripts/rewrite.ts "and in China?" "u:How much power do data centers need?" "a:About 1 GW each."` |
+| `add-sparse-vectors` | One-off: rebuild an old collection with sparse vectors   | `npx tsx --env-file=../.env scripts/add-sparse-vectors.ts`                                                                    |
 
 The id is optional for the first four scripts, which default to a sample video. `rewrite` with no arguments runs a few built-in examples. In its arguments the first text is the question, and the rest are earlier messages, oldest first, starting with `u:` for a user message or `a:` for an assistant message.
 

@@ -11,6 +11,14 @@ export interface SparseVector {
 export const BM25_K1 = 1.2;
 export const BM25_B = 0.75;
 
+/**
+ * The typical number of words in a chunk after tokenizing. It is a constant, not measured from
+ * whatever is being ingested, so a chunk's vector never depends on which other videos exist.
+ * The stored chunks (about 1000 characters each) average 85 to 90 words, with a few videos
+ * higher, so 90 is close for almost all of them.
+ */
+export const AVERAGE_CHUNK_WORDS = 90;
+
 // Words that say nothing about the topic. BM25 already gives common words a low weight, but
 // dropping them keeps the sparse vectors small and stops "what is the" from matching anything.
 // The last two rows are spoken fillers and contractions as they look after apostrophes are removed.

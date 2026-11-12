@@ -1,10 +1,12 @@
 import { QdrantClient } from '@qdrant/js-client-rest';
 import { v5 as uuidv5 } from 'uuid';
 import type { Chunk } from '../chunking/types.js';
+import { AVERAGE_CHUNK_WORDS, documentVector, type SparseVector } from '../search/bm25.js';
 
-// The vector is stored under a name so that other vectors (for example a sparse
-// keyword vector for hybrid search) can be added to the same points later.
+// Each point holds two named vectors: the embedding (search by meaning) and a BM25 sparse
+// vector (search by exact words). Hybrid search uses both.
 const DENSE_VECTOR_NAME = 'dense';
+const SPARSE_VECTOR_NAME = 'bm25';
 const UPSERT_BATCH_SIZE = 100;
 
 // Any fixed UUID works. It only needs to stay the same so ids are stable between runs.
@@ -44,16 +46,28 @@ export class QdrantChunkStore {
     private readonly dimensions: number,
   ) {}
 
-  /** Creates the collection the first time it is needed. Safe to call repeatedly. */
+  /**
+   * Creates the collection the first time it is needed. Safe to call repeatedly.
+   * A collection made before hybrid search has no sparse vector, and Qdrant cannot add one
+   * to an existing collection, so that case is reported instead of failing on the first upsert.
+   */
   async ensureCollection(): Promise<void> {
     const { exists } = await this.client.collectionExists(this.collectionName);
-    if (exists) return;
+    if (exists) {
+      await this.assertHasSparseVector();
+      return;
+    }
 
     await this.client.createCollection(this.collectionName, {
       vectors: {
         // The vector size must match the embedding model, and the distance metric
         // is how Qdrant compares vectors at search time.
         [DENSE_VECTOR_NAME]: { size: this.dimensions, distance: 'Cosine' },
+      },
+      sparse_vectors: {
+        // `idf` makes Qdrant weigh each word by how rare it is across all chunks, so the
+        // client only sends the within-chunk part of BM25 (see bm25.ts).
+        [SPARSE_VECTOR_NAME]: { modifier: 'idf' },
       },
     });
 
@@ -66,6 +80,16 @@ export class QdrantChunkStore {
     });
   }
 
+  private async assertHasSparseVector(): Promise<void> {
+    const { config } = await this.client.getCollection(this.collectionName);
+    if (!config.params.sparse_vectors?.[SPARSE_VECTOR_NAME]) {
+      throw new Error(
+        `Collection "${this.collectionName}" has no "${SPARSE_VECTOR_NAME}" sparse vector. ` +
+          'Run `npx tsx --env-file=../.env scripts/add-sparse-vectors.ts` from server/ to rebuild it.',
+      );
+    }
+  }
+
   /** Replaces all stored chunks of a video, so a re-ingest never leaves stale points behind. */
   async replaceVideoChunks(youtubeId: string, chunks: Chunk[], vectors: number[][]): Promise<void> {
     if (chunks.length !== vectors.length) {
@@ -76,7 +100,10 @@ export class QdrantChunkStore {
 
     const points = chunks.map((chunk, i) => ({
       id: chunkPointId(youtubeId, chunk.index),
-      vector: { [DENSE_VECTOR_NAME]: vectors[i]! },
+      vector: {
+        [DENSE_VECTOR_NAME]: vectors[i]!,
+        [SPARSE_VECTOR_NAME]: documentVector(chunk.text, AVERAGE_CHUNK_WORDS),
+      },
       payload: {
         youtubeId,
         chunkIndex: chunk.index,
@@ -102,6 +129,31 @@ export class QdrantChunkStore {
     const { points } = await this.client.query(this.collectionName, {
       query: vector,
       using: DENSE_VECTOR_NAME,
+      limit,
+      with_payload: true,
+      filter: { must: [{ key: 'youtubeId', match: { any: youtubeIds } }] },
+    });
+    return points.map((point) => ({
+      ...(point.payload as unknown as ChunkPayload),
+      score: point.score,
+    }));
+  }
+
+  /**
+   * Finds the chunks that share the most (rare) words with the question, best first.
+   * The score is a BM25-style keyword score: only its order matters, not its size.
+   * Returns nothing when the question has no words left after stop words are removed.
+   */
+  async searchSparse(
+    vector: SparseVector,
+    youtubeIds: string[],
+    limit: number,
+  ): Promise<ScoredChunk[]> {
+    if (vector.indices.length === 0) return [];
+
+    const { points } = await this.client.query(this.collectionName, {
+      query: vector,
+      using: SPARSE_VECTOR_NAME,
       limit,
       with_payload: true,
       filter: { must: [{ key: 'youtubeId', match: { any: youtubeIds } }] },
