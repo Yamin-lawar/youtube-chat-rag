@@ -1,6 +1,7 @@
 # Learning log
 
 What I built, what I measured, and what I concluded for each part of the RAG pipeline.
+Every experiment with its numbers is collected in [docs/EXPERIMENTS.md](docs/EXPERIMENTS.md).
 Test video for most entries: a 87-minute RAG tutorial (about 11,000 words, auto-generated English captions).
 
 ## 1. Transcript loading
@@ -174,7 +175,7 @@ Both new unanswerable questions scored higher than the weakest answerable one: 0
 
 - Does 768 dimensions lose quality compared with 3072?
 - Does correcting misheard terms improve retrieval?
-- Does hybrid search (dense plus BM25) fix near-ties and exact-term questions?
+- Does hybrid search (dense plus BM25) fix near-ties and exact-term questions? First try (equal-weight RRF): no overall gain, better on facts, lists and multi-video, worse on paraphrases. See E6 in [docs/EXPERIMENTS.md](docs/EXPERIMENTS.md). Weighted RRF and stemming are still to try.
 - Does a reranker improve the final order of results?
 - Does rewriting from user messages only avoid carrying wrong claims into the search?
 - Can anything separate answerable from unanswerable questions? The top score cannot (0.670 for a question the videos do not answer, against 0.629 for the weakest answerable one). Try an LLM check on the retrieved chunks, or the gap between the first and second score.

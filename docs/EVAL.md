@@ -205,3 +205,5 @@ The earlier set of 23 questions on the three short videos scored MRR 0.841, hit 
 - **One chunking setup.** The scripts search the `chunks_recursive` collection. Comparing chunking strategies needs a collection per strategy and a way to choose it. The quote labels themselves do not change.
 - **Chunk size is not controlled.** Metrics count chunks, and a top 5 of small chunks gives the model less text than a top 5 of large ones. Compare chunking strategies together with the amount of text sent.
 - **"No answer" detection by score does not work.** The highest top score among unanswerable questions (0.670) is above the lowest among answerable ones (0.629). The two highest unanswerable scores come from questions that name the speaker ("Howard Marks", "Andrew Ng"), which matches that video's opening even though the topic (cryptocurrency, quantum computing) is never mentioned.
+
+Results of the experiments run with this eval are in [EXPERIMENTS.md](EXPERIMENTS.md).

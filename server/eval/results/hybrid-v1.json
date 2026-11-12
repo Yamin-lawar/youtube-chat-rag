@@ -1,0 +1,279 @@
+{
+  "version": 1,
+  "label": "hybrid-v1",
+  "createdAt": "2026-11-12T14:44:46.416Z",
+  "commit": "cf8906b",
+  "settings": {
+    "search": "hybrid",
+    "topK": 12,
+    "maxScoreDrop": null,
+    "chunking": "recursive"
+  },
+  "answerableCount": 37,
+  "metrics": {
+    "hitRate": {
+      "1": 0.7027027027027027,
+      "3": 0.8918918918918919,
+      "5": 0.972972972972973,
+      "10": 1
+    },
+    "recall": {
+      "1": 0.5990990990990991,
+      "3": 0.7995495495495496,
+      "5": 0.8896396396396398,
+      "10": 0.9572072072072073
+    },
+    "precision": {
+      "1": 0.7027027027027027,
+      "3": 0.44144144144144143,
+      "5": 0.3513513513513514,
+      "10": 0.20270270270270271
+    },
+    "ndcg": {
+      "1": 0.7027027027027027,
+      "3": 0.6600504728941782,
+      "5": 0.7363837667143261,
+      "10": 0.7757675029658156
+    }
+  },
+  "mrr": 0.81509009009009,
+  "mrrByType": {
+    "fact": 1,
+    "list": 0.9,
+    "overview": 0.3020833333333333,
+    "paraphrase": 0.6714285714285715,
+    "multi-video": 0.75
+  },
+  "kept": {
+    "evidenceRecall": 0.9774774774774776,
+    "chunks": 12
+  },
+  "topScores": {
+    "answerableMin": 0.030776515151515152,
+    "unanswerableMax": 0.032266458495966696
+  },
+  "questions": {
+    "q01": {
+      "question": "What is a neo cloud?",
+      "type": "fact",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q02": {
+      "question": "What does backlog, or RPO, mean?",
+      "type": "fact",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q03": {
+      "question": "What share of CoreWeave's revenue comes from its three biggest customers?",
+      "type": "fact",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q04": {
+      "question": "What are the three questions to ask before looking at the chart of an AI cloud stock?",
+      "type": "list",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q05": {
+      "question": "What are the four risks the video sums up for neo cloud stocks?",
+      "type": "list",
+      "firstRank": 2,
+      "reciprocalRank": 0.5
+    },
+    "q06": {
+      "question": "How quickly does an Nvidia H100 chip lose value?",
+      "type": "fact",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q07": {
+      "question": "What is this video about?",
+      "type": "overview",
+      "firstRank": 3,
+      "reciprocalRank": 0.3333333333333333
+    },
+    "q08": {
+      "question": "What did Oracle's force majeure notice say?",
+      "type": "fact",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q09": {
+      "question": "How long is the median wait for new power generation to be connected to the US grid?",
+      "type": "fact",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q10": {
+      "question": "How many gas turbines did xAI buy for its Memphis data center?",
+      "type": "fact",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q11": {
+      "question": "How does China's electricity production compare with the US?",
+      "type": "list",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q12": {
+      "question": "How do Chinese AI model prices compare with OpenAI and Anthropic models?",
+      "type": "fact",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q13": {
+      "question": "What tariff does the US put on chips sold to China?",
+      "type": "fact",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q14": {
+      "question": "What is the main argument about the AI bubble in this video?",
+      "type": "overview",
+      "firstRank": 2,
+      "reciprocalRank": 0.5
+    },
+    "q15": {
+      "question": "How much has Nvidia invested directly in neoclouds?",
+      "type": "fact",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q16": {
+      "question": "Why is borrowing against GPUs risky when new chips come out so often?",
+      "type": "paraphrase",
+      "firstRank": 5,
+      "reciprocalRank": 0.2
+    },
+    "q17": {
+      "question": "How big was CoreWeave's interest expense in the second quarter?",
+      "type": "fact",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q18": {
+      "question": "Why might Elon Musk have his own reasons to talk neoclouds down?",
+      "type": "paraphrase",
+      "firstRank": 2,
+      "reciprocalRank": 0.5
+    },
+    "q19": {
+      "question": "What did Gartner forecast for neo clouds?",
+      "type": "multi-video",
+      "firstRank": 2,
+      "reciprocalRank": 0.5
+    },
+    "q20": {
+      "question": "How did CoreWeave's bond yields change?",
+      "type": "multi-video",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q21": {
+      "question": "What did Elon Musk say about the limits on AI?",
+      "type": "multi-video",
+      "firstRank": 4,
+      "reciprocalRank": 0.25
+    },
+    "q22": {
+      "question": "Which companies are the biggest makers of gas turbines?",
+      "type": "multi-video",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q23": {
+      "question": "What goes wrong when the chips used as security lose value?",
+      "type": "paraphrase",
+      "firstRank": 2,
+      "reciprocalRank": 0.5
+    },
+    "q26": {
+      "question": "What did Moody's say about B-rated bonds, according to Howard Marks?",
+      "type": "fact",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q27": {
+      "question": "What return did Howard Marks's distressed debt funds earn?",
+      "type": "fact",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q28": {
+      "question": "What lesson does the story of the tall man who drowned in a stream teach?",
+      "type": "paraphrase",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q29": {
+      "question": "What principles are part of Oaktree's investment philosophy?",
+      "type": "list",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q30": {
+      "question": "What is the main message of Howard Marks's talk?",
+      "type": "overview",
+      "firstRank": 8,
+      "reciprocalRank": 0.125
+    },
+    "q31": {
+      "question": "Are index funds a safe way for an ordinary investor to avoid losing money?",
+      "type": "paraphrase",
+      "firstRank": 2,
+      "reciprocalRank": 0.5
+    },
+    "q33": {
+      "question": "Why does Andrew Ng say the way most people use AI is bad for learning?",
+      "type": "paraphrase",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q34": {
+      "question": "Which analogy does Andrew Ng use to explain that nobody can perfectly control AI?",
+      "type": "fact",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q35": {
+      "question": "What is happening to software engineering job openings, according to Andrew Ng?",
+      "type": "fact",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q36": {
+      "question": "What advice does Andrew Ng give to college students and fresh graduates?",
+      "type": "list",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q37": {
+      "question": "What does Andrew Ng think about the fear around AI?",
+      "type": "overview",
+      "firstRank": 4,
+      "reciprocalRank": 0.25
+    },
+    "q38": {
+      "question": "What is the product management bottleneck?",
+      "type": "fact",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q39": {
+      "question": "How far away does Andrew Ng think human-level AI is?",
+      "type": "paraphrase",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q41": {
+      "question": "What do the two speakers say about hype and following the crowd?",
+      "type": "multi-video",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    }
+  }
+}

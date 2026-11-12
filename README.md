@@ -80,6 +80,7 @@ npx tsx --env-file=../.env scripts/eval-review.ts q03 q07   # only these
 ```
 
 How it works, how to read the output and how to check the labels: [docs/EVAL.md](docs/EVAL.md).
+Every experiment and its result, in order: [docs/EXPERIMENTS.md](docs/EXPERIMENTS.md).
 
 ### RAG scripts
 
