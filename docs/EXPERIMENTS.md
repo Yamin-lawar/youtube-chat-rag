@@ -6,19 +6,20 @@ How the numbers are produced is in [EVAL.md](EVAL.md). The per-block notes (what
 
 ## Summary
 
-| #   | Experiment                                                | Question                                                           | Result                                                                                        | Status                   |
-| --- | --------------------------------------------------------- | ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- | ------------------------ |
-| E1  | Distance metrics                                          | Does cosine, dot product or Euclidean matter?                      | No, the three return almost the same chunks                                                   | Done, cosine kept        |
-| E2  | Retrieval settings (top-k, margin)                        | Why was an answer one sentence long?                               | The 0.08 margin cut useful chunks; 12 and 0.12 fixed it                                       | Done, one question only  |
-| E3  | Eval set v1 and first baseline                            | How good is dense search?                                          | MRR 0.841, but the set was too easy                                                           | Done                     |
-| E4  | Eval set v2 (long videos)                                 | Can a harder set separate strategies?                              | Partly: top 1, top 3, MRR, nDCG can; hit rate at 5 still 100%                                 | Done, baseline saved     |
-| E5  | Reproducibility checks                                    | Is the eval deterministic and refactor-safe?                       | Yes, four re-runs gave identical numbers                                                      | Done                     |
-| E6  | Hybrid search v1 (dense + BM25, RRF)                      | Does adding exact-word search help?                                | No: MRR 0.818 to 0.815, paraphrases much worse                                                | Done, not adopted        |
-| E7  | Weighted RRF (sparse weight 0 to 1)                       | Does a smaller keyword vote fix the paraphrase drop?               | Paraphrase drop shrinks as the weight falls; best MRR +0.02 (later shown to be noise, see E8) | Done, not adopted        |
-| E8  | Eval set v3 (45 new questions) and a held-out check of E7 | Does the weight chosen in E7 still help on questions it never saw? | No: MRR 0.801 (dense) against 0.779 (weight 0.3), and worse with more weight                  | Done, new baseline saved |
-| E9+ | Reranker, stemming, ...                                   | See "Planned"                                                      |                                                                                               | Not run yet              |
+| #    | Experiment                                                | Question                                                           | Result                                                                                        | Status                   |
+| ---- | --------------------------------------------------------- | ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- | ------------------------ |
+| E1   | Distance metrics                                          | Does cosine, dot product or Euclidean matter?                      | No, the three return almost the same chunks                                                   | Done, cosine kept        |
+| E2   | Retrieval settings (top-k, margin)                        | Why was an answer one sentence long?                               | The 0.08 margin cut useful chunks; 12 and 0.12 fixed it                                       | Done, one question only  |
+| E3   | Eval set v1 and first baseline                            | How good is dense search?                                          | MRR 0.841, but the set was too easy                                                           | Done                     |
+| E4   | Eval set v2 (long videos)                                 | Can a harder set separate strategies?                              | Partly: top 1, top 3, MRR, nDCG can; hit rate at 5 still 100%                                 | Done, baseline saved     |
+| E5   | Reproducibility checks                                    | Is the eval deterministic and refactor-safe?                       | Yes, four re-runs gave identical numbers                                                      | Done                     |
+| E6   | Hybrid search v1 (dense + BM25, RRF)                      | Does adding exact-word search help?                                | No: MRR 0.818 to 0.815, paraphrases much worse                                                | Done, not adopted        |
+| E7   | Weighted RRF (sparse weight 0 to 1)                       | Does a smaller keyword vote fix the paraphrase drop?               | Paraphrase drop shrinks as the weight falls; best MRR +0.02 (later shown to be noise, see E8) | Done, not adopted        |
+| E8   | Eval set v3 (45 new questions) and a held-out check of E7 | Does the weight chosen in E7 still help on questions it never saw? | No: MRR 0.801 (dense) against 0.779 (weight 0.3), and worse with more weight                  | Done, new baseline saved |
+| E9   | Reranker (cross-encoder on the top 20)                    | Does reading question and chunk together fix the order?            | minilm: worse on both sets. bge-m3: MRR 0.801 to 0.888 on held-out, flat on old set           | Done, bge-m3 promising   |
+| E10+ | Stemming, ...                                             | See "Planned"                                                      |                                                                                               | Not run yet              |
 
-The app still uses **dense search** (`SEARCH_STRATEGY` defaults to `dense`) because nothing has beaten the baseline yet.
+The app still uses **dense search with no reranker** (`SEARCH_STRATEGY` defaults to `dense`, `RERANKER` to `none`). The bge-m3 reranker (E9) is the first thing that looks better, but it costs about 4 seconds a question and I have not measured answer quality, so it is opt-in for now.
 
 ## The yardstick
 
@@ -205,22 +206,72 @@ MRR 0.809 (was 0.818). By type: facts 0.931, lists 0.821, paraphrases 0.772, mul
   - The tokenizer **removes Hindi vowel marks** (it strips accents with a rule that also hits Devanagari: "जून" becomes "जन", "बिलियन" becomes "बलयन"), so keyword search on the Hindi video is damaged as well as useless for English questions. It touches only that video's questions (2 of 41). Known bug, not fixed yet.
   - Keyword search also depends on caption quality: auto-generated captions mishear words, so an exact term can be missing from the transcript.
 
+## E9. Reranker: a cross-encoder reads question and chunk together
+
+- **Why:** dense search compares two vectors that were made separately, so the chunk's vector was written without knowing the question. A cross-encoder reads the question and one chunk together and outputs one score, so it can notice details such as "RPO". The question: does reordering the top candidates with it fix the near-ties dense search gets wrong?
+- **What I built:** `RerankedSearch` takes the top 20 chunks from the normal search, scores each one against the question with a model running inside the Node process (`@huggingface/transformers`, ONNX on CPU), and keeps the best 12. Two models, chosen with `RERANKER` or `--reranker`:
+
+| Name   | Model                                | Size (on disk) | Time for 20 chunks | Languages    |
+| ------ | ------------------------------------ | -------------- | ------------------ | ------------ |
+| minilm | Xenova/ms-marco-MiniLM-L-6-v2 (fp32) | 87 MB          | about 0.25 s       | English only |
+| bge-m3 | bge-reranker-v2-m3 (ONNX, 8-bit q8)  | 561 MB         | about 3.9 s        | multilingual |
+
+Cohere Rerank was ruled out because it is API-only (cannot be self-hosted). The "no local models" rule was relaxed only for this reranker.
+
+- **Setup:** same 86 questions, top 12 kept, no margin filter (reranker scores are not comparable to cosine, so `maxScoreDrop` is off). The question embeddings came from the new cache, so every run saw identical queries. Choose on q01 to q41, confirm on q42 to q86 (as in E8).
+- **Results, all 78 answerable questions** (runs saved in `server/eval/results/`):
+
+| Search             | hit@1 | hit@3 | hit@5 | hit@10 | nDCG@5 | MRR       | fact | list | overview | paraphrase | multi |
+| ------------------ | ----- | ----- | ----- | ------ | ------ | --------- | ---- | ---- | -------- | ---------- | ----- |
+| dense (baseline)   | 69%   | 91%   | 97%   | 100%   | 0.752  | 0.809     | 0.93 | 0.82 | 0.53     | 0.77       | 0.64  |
+| dense + minilm     | 64%   | 90%   | 95%   | 99%    | 0.689  | 0.776     | 0.87 | 0.91 | 0.50     | 0.64       | 0.80  |
+| hybrid + minilm    | 64%   | 88%   | 94%   | 99%    | 0.681  | 0.773     | 0.85 | 0.91 | 0.50     | 0.64       | 0.86  |
+| **dense + bge-m3** | 81%   | 86%   | 94%   | 97%    | 0.771  | **0.854** | 0.97 | 1.00 | 0.58     | 0.70       | 0.82  |
+
+- **The held-out check.** Same runs split into the questions I used to look at things (37 answerable, q01 to q41) and the ones I had not (41 answerable, q42 to q86):
+
+| Search          | Old 37 MRR | Old 37 hit@1 | New 41 MRR | New 41 hit@1 | New 41 nDCG@5 |
+| --------------- | ---------- | ------------ | ---------- | ------------ | ------------- |
+| dense           | 0.818      | 70%          | 0.801      | 68%          | 0.751         |
+| dense + minilm  | 0.798      | 68%          | 0.756      | 61%          | 0.693         |
+| hybrid + minilm | 0.798      | 68%          | 0.750      | 61%          |               |
+| dense + bge-m3  | 0.815      | 76%          | **0.888**  | **85%**      | 0.792         |
+
+Saved separately as `new45-dense-minilm` and `new45-dense-bge-m3` runs. The eval prints the settings comparison against the 86-question baseline for `--only` runs (for example "0.809 to 0.888"), which is not like for like: compare against the held-out dense run (0.801) instead, as in the table above.
+
+- **What this shows:**
+  - **minilm is worse than no reranker, on both sets.** MRR down 0.020 on the old questions and 0.045 on the new ones. Same direction on two sets, so I believe it. It lost most on paraphrases (0.77 to 0.64) and on facts (0.93 to 0.87). The likely reason is that it was trained on English web-search queries and short passages, and our questions are spoken-style and our chunks are caption text (not checked).
+  - **Hybrid plus a reranker is the same as dense plus a reranker** (0.773 against 0.776). The reranker decides the order, so the first-stage choice hardly matters. That is a second, indirect reason hybrid was not worth it. Not tested with bge-m3.
+  - **bge-m3 helps at the top and costs a little further down.** hit@1 rose from 69% to 81% (about 9 questions of 78), MRR 0.809 to 0.854, nDCG@5 0.752 to 0.771. But hit@3 fell 91% to 86%, hit@5 97% to 94% and hit@10 100% to 97%. 14 questions moved up, 11 moved down, and the worst were q59 (rank 1 to 12) and q30 (rank 3, now outside the top 12).
+  - **The gain is not selection noise this time, but it is uneven.** On the old 37 questions MRR is flat (0.818 to 0.815, hit@1 70% to 76%). On the new 41 it is large (0.801 to 0.888, hit@1 68% to 85%, about 7 questions). It lost nothing on either set by MRR, unlike E7. The new questions have more exact terms and repeated ideas, which may be where a cross-encoder helps most.
+  - **Types:** with bge-m3, facts 0.93 to 0.97, lists 0.82 to 1.00, multi-video 0.64 to 0.82, overview 0.53 to 0.58, but paraphrase 0.77 to 0.70. By set: on the 7 old paraphrases 0.857 to 0.673, on the 9 new ones 0.706 to 0.717 (flat). Paraphrases did not improve, and on the old set they got clearly worse (7 questions, so noisy), which is the same weak spot hybrid search had.
+- **Cost:** about 3.9 seconds a question on this laptop CPU for bge-m3 (86 questions took 5 min 36 s) against about 0.25 s for minilm. The model is 561 MB on disk and the Node process grew to about 500 MB of memory. On a server without a fast CPU this is a real cost for chat.
+- **Conclusion:** the minilm reranker is **rejected**. The bge-m3 reranker is **promising and not adopted yet**. It sharpens the first result (hit@1 +12 points) but thins the tail, and it is slow. `RERANKER` stays `none` by default.
+- **Caveats (important):**
+  - **The answer model sees 12 chunks, not one.** What matters for the final answer is whether the evidence is in those 12. With bge-m3 the share of evidence quotes kept in the 12 went down slightly, 0.981 to 0.968 (the dense baseline kept about 10.5 chunks on average because of its margin filter, so this is not exactly like for like). So **the retrieval gain at rank 1 may not turn into better answers**. Answer quality was not measured.
+  - **"No answer" is untested with a reranker.** Refusing relied on cosine scores and the margin filter, which are off here. I have not checked what the reranker does with the 8 unanswerable questions.
+  - **Only the top 20 candidates are reranked.** A right chunk outside the first 20 cannot be rescued. I did not try 10 or 30 candidates.
+  - **41 held-out questions is small.** 0.087 MRR is a handful of questions. The reasons to believe it are hit@1, MRR and nDCG all rising and nothing getting worse by MRR on either set. The reasons for doubt are the old-set MRR being flat and the tail getting worse.
+  - **The 8-bit (q8) bge-m3 model is a lossy version.** I did not compare it with the full-precision one.
+  - **Same warning as before:** the model was tried once with default settings. I did not tune anything for it, which is on purpose, so the numbers are not flattered.
+
 ## Planned (not run yet)
 
 Each is a small change judged on the same eval. Add a result below when it is run.
 
-| Idea                                                | What it tests                                                                                                    |
-| --------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| Fewer sparse candidates (5 to 10)                   | Does less noise in the sparse list help?                                                                         |
-| Fix Hindi (Devanagari) vowel marks in the tokenizer | Strip accents only from Latin letters, keep the marks of other scripts; rebuild the sparse vectors (found in E8) |
-| Stemming in the tokenizer                           | "customer"/"customers", "pay"/"paid" match, so the sparse list gets better                                       |
-| Reranker                                            | Does reordering the top candidates with a cross-encoder fix near-ties?                                           |
-| Query optimisation                                  | Do rewritten or expanded questions retrieve better than the raw question?                                        |
-| Chunking variants                                   | Sentence-aware, time-window, different sizes, parent-child; needs a collection per strategy                      |
-| 768 against 3072 dimensions                         | Does the smaller embedding lose quality?                                                                         |
-| Correcting misheard terms                           | Does fixing "superbase" to "Supabase" in the transcript help?                                                    |
-| Margin and top-k tuning                             | Tune 12 and 0.12 on the eval instead of one question                                                             |
-| "No answer" detection                               | LLM check on the retrieved chunks, or the gap between the first and second score                                 |
+| Idea                                                | What it tests                                                                                                      |
+| --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Fewer sparse candidates (5 to 10)                   | Does less noise in the sparse list help?                                                                           |
+| Fix Hindi (Devanagari) vowel marks in the tokenizer | Strip accents only from Latin letters, keep the marks of other scripts; rebuild the sparse vectors (found in E8)   |
+| Stemming in the tokenizer                           | "customer"/"customers", "pay"/"paid" match, so the sparse list gets better                                         |
+| Reranker follow-ups                                 | Candidates 10 or 30 instead of 20; hybrid plus bge-m3; bge-m3 at full precision; a cut-off so the tail is not lost |
+| Answer-level check of the reranker                  | Does the answer improve, not just rank 1? Include the 8 unanswerable questions (no-answer behaviour)               |
+| Query optimisation                                  | Do rewritten or expanded questions retrieve better than the raw question?                                          |
+| Chunking variants                                   | Sentence-aware, time-window, different sizes, parent-child; needs a collection per strategy                        |
+| 768 against 3072 dimensions                         | Does the smaller embedding lose quality?                                                                           |
+| Correcting misheard terms                           | Does fixing "superbase" to "Supabase" in the transcript help?                                                      |
+| Margin and top-k tuning                             | Tune 12 and 0.12 on the eval instead of one question                                                               |
+| "No answer" detection                               | LLM check on the retrieved chunks, or the gap between the first and second score                                   |
 
 ## Other measurements (not retrieval experiments)
 
@@ -232,7 +283,7 @@ Each is a small change judged on the same eval. Add a result below when it is ru
 
 ## Interview cheat sheet
 
-**One-minute story.** I built a chat-with-YouTube-videos RAG app, then did not trust my own impression of its quality, so I built a retrieval eval first: 86 questions labelled with transcript quotes mapped to time ranges, so labels survive chunking changes. Every change is judged by numbers against a saved baseline. Hybrid search was the first real experiment and it did not beat dense. Turning the keyword list down looked like a small win on the questions I tuned on, so I added 45 new questions and checked on those: the win disappeared and hybrid was worse at every weight. I dropped it.
+**One-minute story.** I built a chat-with-YouTube-videos RAG app, then did not trust my own impression of its quality, so I built a retrieval eval first: 86 questions labelled with transcript quotes mapped to time ranges, so labels survive chunking changes. Every change is judged by numbers against a saved baseline. Hybrid search was the first real experiment and it did not beat dense. Turning the keyword list down looked like a small win on the questions I tuned on, so I added 45 new questions and checked on those: the win disappeared and hybrid was worse at every weight. I dropped it. Then I added a self-hosted cross-encoder reranker: a small one made things worse on both sets, a large multilingual one lifted the top-1 hit rate from 69% to 81% (MRR 0.809 to 0.854, strongest on questions I had not tuned on) but costs about 4 seconds a question and thins the tail, so I kept it opt-in until I can measure answer quality.
 
 **Questions I should be able to answer**
 
@@ -245,6 +296,10 @@ Each is a small change judged on the same eval. Add a result below when it is ru
 - _Why RRF, and not just add the scores?_ The two scores are on different scales (cosine about 0.5 to 0.8, BM25 up to double digits). RRF uses only ranks: `1/(60+rank)` from each list.
 - _Why did hybrid not help?_ It helped questions that name specific things (facts, lists, multi-video) and hurt paraphrases, whose wording is not in the transcript, so the keyword list adds noise. I tested that by weighting the keyword list from 0 to 1: paraphrase MRR fell steadily as the weight went up (0.86 down to 0.67). A weight of 0.3 gave the best MRR (0.839 against 0.818), but the curve is bumpy and the gain is one or two questions, so I did not adopt it.
 - _You tried 8 weights and picked the best, isn't that overfitting?_ Yes, and I checked it. The best weight (0.3) gained 0.021 MRR on the 37 questions I chose it on, but on 41 new questions it lost 0.022 (0.801 to 0.779) and more keyword weight was worse at every step. So I withdrew the win. Choosing on one set and confirming on a fresh one is why I keep the new questions separate (`--only q42-q86`).
+- _What is a reranker and why does it help?_ Dense search scores a chunk with a vector that was made without knowing the question. A cross-encoder reads the question and the chunk together and gives one score, so it catches details a summary vector blurs. It is too slow for all chunks, so it only reorders the top 20 from the normal search (retrieve wide, rerank narrow).
+- _Why didn't you use Cohere Rerank?_ It is API-only, so it cannot be self-hosted, and its free trial allows about 10 calls a minute, which makes an 86-question eval slow. A local model is deterministic, needs no key and is free.
+- _Did the reranker help?_ It depends on the model. MiniLM made things worse on both question sets (MRR down 0.02 and 0.045). The large multilingual bge-m3 raised hit@1 from 69% to 81% and MRR from 0.809 to 0.854, with most of the gain on the held-out set (0.801 to 0.888), but top-3 and top-5 hit rates fell a few points, it takes about 4 s a question and I have not shown that answers improve. So I call it promising, not adopted.
+- _Why did the small reranker lose?_ Probably because it was trained on English web search queries and short passages and ours are spoken-style questions over caption text. I did not verify the reason, only that the loss is the same direction on two question sets.
 - _What would you do differently?_ A bigger question set written by someone who has not read the videos. Now one question is 1.3 points, which is better, but a change of one or two questions is still noise, so only consistent moves across several metrics and across two sets mean something.
 - _Is your eval deterministic?_ Yes. Identical numbers across four re-runs (E5). The noise that is left is the question set size.
 - _Why did you build the eval yourself and not use Ragas, DeepEval or LangSmith?_ Ragas and DeepEval are Python, and LangSmith is hosted and would send data out. The stack is TypeScript and free tiers, and the retrieval metrics are simple to write and to explain.
@@ -253,18 +308,20 @@ Each is a small change judged on the same eval. Add a result below when it is ru
 
 **Numbers worth remembering**
 
-| What                             | Number                                       |
-| -------------------------------- | -------------------------------------------- |
-| Eval set                         | 86 questions, 78 answerable, 12 videos       |
-| Baseline (dense)                 | MRR 0.809, hit rate 69% at 1, 91% at 3       |
-| Hit rate at top 5                | 97% (100% at top 10, too flat to compare on) |
-| Weakest question type            | Overview, MRR 0.528 (multi-video 0.643)      |
-| One question is worth            | 1.3 points of hit rate                       |
-| Hybrid v1 (equal weights)        | MRR 0.815, paraphrase MRR 0.857 to 0.671     |
-| Weighted RRF (weight 0.3)        | Old set +0.021 MRR, new set -0.022: not real |
-| Chunks                           | 375 in total, about 1000 characters          |
-| BM25 / RRF constants             | k1 1.2, b 0.75, RRF k 60                     |
-| Gemini against Groq, same prompt | 193 s against 0.96 s                         |
+| What                             | Number                                                           |
+| -------------------------------- | ---------------------------------------------------------------- |
+| Eval set                         | 86 questions, 78 answerable, 12 videos                           |
+| Baseline (dense)                 | MRR 0.809, hit rate 69% at 1, 91% at 3                           |
+| Hit rate at top 5                | 97% (100% at top 10, too flat to compare on)                     |
+| Weakest question type            | Overview, MRR 0.528 (multi-video 0.643)                          |
+| One question is worth            | 1.3 points of hit rate                                           |
+| Hybrid v1 (equal weights)        | MRR 0.815, paraphrase MRR 0.857 to 0.671                         |
+| Weighted RRF (weight 0.3)        | Old set +0.021 MRR, new set -0.022: not real                     |
+| Reranker minilm / bge-m3         | MRR 0.776 / 0.854 (dense 0.809); about 0.25 s / 3.9 s a question |
+| bge-m3 on held-out questions     | MRR 0.801 to 0.888, hit@1 68% to 85%                             |
+| Chunks                           | 375 in total, about 1000 characters                              |
+| BM25 / RRF constants             | k1 1.2, b 0.75, RRF k 60                                         |
+| Gemini against Groq, same prompt | 193 s against 0.96 s                                             |
 
 ## How to add an entry
 

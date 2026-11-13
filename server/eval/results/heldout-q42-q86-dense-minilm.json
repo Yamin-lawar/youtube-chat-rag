@@ -1,0 +1,305 @@
+{
+  "version": 1,
+  "label": "new45-dense-minilm",
+  "createdAt": "2026-11-13T11:40:03.199Z",
+  "commit": "bdf24be",
+  "settings": {
+    "search": "dense",
+    "topK": 12,
+    "maxScoreDrop": null,
+    "chunking": "recursive",
+    "reranker": "minilm",
+    "rerankCandidates": 20
+  },
+  "answerableCount": 41,
+  "metrics": {
+    "hitRate": {
+      "1": 0.6097560975609756,
+      "3": 0.8780487804878049,
+      "5": 0.9512195121951219,
+      "10": 0.975609756097561
+    },
+    "recall": {
+      "1": 0.5670731707317073,
+      "3": 0.8414634146341463,
+      "5": 0.9329268292682927,
+      "10": 0.9634146341463414
+    },
+    "precision": {
+      "1": 0.6097560975609756,
+      "3": 0.4065040650406505,
+      "5": 0.3024390243902439,
+      "10": 0.18048780487804877
+    },
+    "ndcg": {
+      "1": 0.6097560975609756,
+      "3": 0.6395463495127355,
+      "5": 0.6927756690385668,
+      "10": 0.7370395283997476
+    }
+  },
+  "mrr": 0.7562823355506282,
+  "mrrByType": {
+    "fact": 0.8182539682539682,
+    "paraphrase": 0.5693602693602693,
+    "overview": 0.7,
+    "list": 1,
+    "multi-video": 0.8
+  },
+  "kept": {
+    "evidenceRecall": 0.9878048780487805,
+    "chunks": 12
+  },
+  "topScores": {
+    "answerableMin": -10.95151138305664,
+    "unanswerableMax": 1.4155666828155518
+  },
+  "questions": {
+    "q42": {
+      "question": "What did Stripe build for its engineers?",
+      "type": "fact",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q43": {
+      "question": "Which library does the harness engineering demo use to get the basic agent loop?",
+      "type": "fact",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q44": {
+      "question": "At how many tokens does the summarization step kick in?",
+      "type": "fact",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q45": {
+      "question": "What maximum context length does Opus 4.6 have?",
+      "type": "fact",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q46": {
+      "question": "Which tool does the video show for automatically testing a website?",
+      "type": "fact",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q47": {
+      "question": "How do you make the assistant pause for a go-ahead from a person before a risky action?",
+      "type": "paraphrase",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q48": {
+      "question": "Why might the same AI model feel brilliant in one coding tool and useless in another?",
+      "type": "paraphrase",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q49": {
+      "question": "What is the main point of the video about AI agent harnesses?",
+      "type": "overview",
+      "firstRank": 2,
+      "reciprocalRank": 0.5
+    },
+    "q50": {
+      "question": "What is harness engineering and why are companies hiring for it?",
+      "type": "overview",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q51": {
+      "question": "What are the four components of the harness that is built step by step?",
+      "type": "list",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q52": {
+      "question": "What do the two harness videos say about managing the context window?",
+      "type": "multi-video",
+      "firstRank": 5,
+      "reciprocalRank": 0.2
+    },
+    "q53": {
+      "question": "Which products does each harness video give as examples of a harness?",
+      "type": "multi-video",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q54": {
+      "question": "How much long-term debt does Apple have in the stock-picking example?",
+      "type": "fact",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q55": {
+      "question": "What does a price to earnings ratio of 20 mean?",
+      "type": "fact",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q56": {
+      "question": "Which app does the beginner investing walkthrough use?",
+      "type": "fact",
+      "firstRank": 2,
+      "reciprocalRank": 0.5
+    },
+    "q57": {
+      "question": "What is the yearly limit for a US Roth IRA mentioned in the beginner video?",
+      "type": "fact",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q58": {
+      "question": "How far below the 50-year mean growth must the market fall before the saved cash is invested?",
+      "type": "fact",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q59": {
+      "question": "Why is it better to invest a bit every month than to wait for the perfect moment?",
+      "type": "paraphrase",
+      "firstRank": 11,
+      "reciprocalRank": 0.09090909090909091
+    },
+    "q60": {
+      "question": "How can someone invest a tiny amount every day without thinking about it?",
+      "type": "paraphrase",
+      "firstRank": 2,
+      "reciprocalRank": 0.5
+    },
+    "q61": {
+      "question": "What strategy does the dollar cost averaging video teach?",
+      "type": "overview",
+      "firstRank": 2,
+      "reciprocalRank": 0.5
+    },
+    "q62": {
+      "question": "What checklist does the stock-picking video give a beginner?",
+      "type": "overview",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q63": {
+      "question": "What do the investing videos say about index funds?",
+      "type": "multi-video",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q64": {
+      "question": "Who says index funds do not remove the risk of losing money?",
+      "type": "multi-video",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q65": {
+      "question": "What reasons does the tutorial give for retrieving only the relevant parts instead of the whole transcript?",
+      "type": "list",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q66": {
+      "question": "How many dimensions does the text embedding large model have in the tutorial?",
+      "type": "fact",
+      "firstRank": 2,
+      "reciprocalRank": 0.5
+    },
+    "q67": {
+      "question": "How many recent messages does the tutorial pass as chat history?",
+      "type": "fact",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q68": {
+      "question": "What is the default number of matches the match function returns?",
+      "type": "fact",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q69": {
+      "question": "What do you call it when the answer appears piece by piece instead of all at once?",
+      "type": "paraphrase",
+      "firstRank": 3,
+      "reciprocalRank": 0.3333333333333333
+    },
+    "q70": {
+      "question": "How can the search understand that director, boss and CEO mean the same idea?",
+      "type": "paraphrase",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q71": {
+      "question": "What everyday comparison does the tutorial use for the retrieval step?",
+      "type": "paraphrase",
+      "firstRank": 2,
+      "reciprocalRank": 0.5
+    },
+    "q72": {
+      "question": "Why does the tutorial turn off row level security, and what should you do in production?",
+      "type": "fact",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q73": {
+      "question": "What does the tutorial build?",
+      "type": "overview",
+      "firstRank": 2,
+      "reciprocalRank": 0.5
+    },
+    "q74": {
+      "question": "How much did Meta invest in Scale AI in June 2025?",
+      "type": "fact",
+      "firstRank": 3,
+      "reciprocalRank": 0.3333333333333333
+    },
+    "q75": {
+      "question": "Why did Meta's open-source plan fail?",
+      "type": "fact",
+      "firstRank": 10,
+      "reciprocalRank": 0.1
+    },
+    "q76": {
+      "question": "What tennis comparison does Howard Marks use for investing styles?",
+      "type": "fact",
+      "firstRank": 2,
+      "reciprocalRank": 0.5
+    },
+    "q77": {
+      "question": "Which famous warning says that being sure of something false is more dangerous than not knowing?",
+      "type": "paraphrase",
+      "firstRank": 2,
+      "reciprocalRank": 0.5
+    },
+    "q78": {
+      "question": "What yearly return did Oaktree make buying distressed debt?",
+      "type": "fact",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q79": {
+      "question": "How many pages are in the free PDF of Howard Marks's memos?",
+      "type": "fact",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q80": {
+      "question": "What does Andrew Ng say about the way most people use AI to learn?",
+      "type": "fact",
+      "firstRank": 4,
+      "reciprocalRank": 0.25
+    },
+    "q81": {
+      "question": "How does Andrew Ng compare keeping AI under control to something people already trust with their lives?",
+      "type": "paraphrase",
+      "firstRank": 5,
+      "reciprocalRank": 0.2
+    },
+    "q82": {
+      "question": "Why does Andrew Ng say AGI could already have been reached?",
+      "type": "fact",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    }
+  }
+}
