@@ -103,6 +103,14 @@ const search = createSearch(strategyName, {
   reranker: createReranker(rerankerName),
 });
 
+const missing = await embedder.countMissing(questions.map((q) => q.question));
+console.log(
+  missing === 0
+    ? `Question embeddings: all ${questions.length} cached, no Gemini requests needed.`
+    : `Question embeddings: ${questions.length - missing} cached, ${missing} to fetch ` +
+        `(uses ${missing} of the 1000 free Gemini requests a day).`,
+);
+
 const stored: ChunkPayload[] = [];
 for (const youtubeId of new Set(questions.flatMap((q) => q.youtubeIds))) {
   stored.push(...(await store.sampleChunks(youtubeId, 1000)));

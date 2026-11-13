@@ -28,9 +28,15 @@ export class CachingEmbedder implements Embedder {
     return this.inner.embedDocuments(texts);
   }
 
+  /** How many of these questions are not cached yet, so each would use one embedding request. */
+  async countMissing(texts: string[]): Promise<number> {
+    const cache = await this.load();
+    return new Set(texts.filter((text) => !cache.has(this.keyFor(text)))).size;
+  }
+
   async embedQuery(text: string): Promise<number[]> {
     const cache = await this.load();
-    const key = `${this.model}:${this.inner.dimensions}:${text}`;
+    const key = this.keyFor(text);
 
     const known = cache.get(key);
     if (known) return known;
@@ -40,6 +46,10 @@ export class CachingEmbedder implements Embedder {
     // Saved after every new question, so a run that hits a quota error halfway keeps its work.
     await this.save(cache);
     return vector;
+  }
+
+  private keyFor(text: string): string {
+    return `${this.model}:${this.inner.dimensions}:${text}`;
   }
 
   private async load(): Promise<Map<string, number[]>> {

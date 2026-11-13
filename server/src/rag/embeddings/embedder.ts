@@ -17,6 +17,16 @@ const WINDOW_MS = 60_000;
 // so a rate-limit error is guaranteed to have cleared by the final attempt.
 const RETRY_DELAYS_MS = [5_000, 20_000, 65_000];
 
+/**
+ * True when Gemini says the DAILY free quota is used up (as opposed to the per-minute limit).
+ * Waiting a minute fixes the second, but nothing fixes the first until the quota resets, so
+ * retrying only wastes time.
+ */
+export function isDailyQuotaError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  return /PerDay|per day/i.test(message);
+}
+
 export interface Embedder {
   readonly dimensions: number;
   /** Embeds transcript chunks for storage. */
@@ -106,6 +116,14 @@ export class GeminiEmbedder implements Embedder {
         return result;
       } catch (error) {
         lastError = error;
+        if (isDailyQuotaError(error)) {
+          throw new Error(
+            'The Gemini daily embedding quota is used up (1000 requests a day on the free tier). ' +
+              'It resets once a day, so retrying now will not help. Questions already cached by ' +
+              'the eval still work.',
+            { cause: error },
+          );
+        }
         const delay = RETRY_DELAYS_MS[attempt];
         if (delay !== undefined) await sleep(delay);
       }

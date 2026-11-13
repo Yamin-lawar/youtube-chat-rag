@@ -100,4 +100,14 @@ describe('CachingEmbedder', () => {
   it('reports the dimensions of the embedder it wraps', () => {
     expect(new CachingEmbedder(fakeEmbedder(768).embedder, path).dimensions).toBe(768);
   });
+
+  it('counts how many questions are not cached yet, without asking the embedder', async () => {
+    const { embedder, queries } = fakeEmbedder();
+    const cached = new CachingEmbedder(embedder, path, 'model-a');
+    await cached.embedQuery('known');
+    queries.length = 0;
+
+    expect(await cached.countMissing(['known', 'new one', 'new one', 'another'])).toBe(2);
+    expect(queries).toEqual([]);
+  });
 });
