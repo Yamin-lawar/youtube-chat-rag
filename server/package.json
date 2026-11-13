@@ -12,6 +12,7 @@
     "db:migrate": "prisma migrate dev && prisma generate",
     "db:deploy": "prisma migrate deploy",
     "eval": "tsx --env-file=../.env scripts/eval.ts",
+    "eval:answers": "tsx --env-file=../.env scripts/eval-answers.ts",
     "eval:compare": "tsx scripts/eval-compare.ts"
   },
   "dependencies": {

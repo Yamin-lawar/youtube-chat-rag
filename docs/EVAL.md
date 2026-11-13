@@ -124,6 +124,11 @@ npm run eval --workspace server -- --reranker minilm --label dense-minilm
 # score only some questions: ids and ranges in file order (cannot be combined with --save-baseline)
 npm run eval --workspace server -- --only q42-q86 --label new-questions
 
+# answer-level check: write real answers (retrieve, then generate), then check refusals and citations
+# --dry-run only counts the calls. Answers are cached by prompt, so a stopped run resumes where it stopped.
+# One provider only (--provider groq, the default, or gemini). The free tiers limit this hard (E10).
+npm run eval:answers --workspace server -- --reranker bge-m3 --only q42-q56 --label dense-bge-m3
+
 # compare against another saved run instead of the baseline
 npm run eval --workspace server -- --against eval/runs/<file>.json
 

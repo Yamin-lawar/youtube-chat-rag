@@ -1,0 +1,184 @@
+{
+  "label": "rescore-q42-q56-none",
+  "commit": "d04999f",
+  "settings": {
+    "search": "dense",
+    "reranker": "none",
+    "generator": "groq:openai/gpt-oss-120b"
+  },
+  "summary": {
+    "unanswerableRefused": 0,
+    "unanswerable": 0,
+    "answerableRefused": 0,
+    "answerable": 15,
+    "answeredWithEvidence": 15,
+    "citationPrecision": 0.7304232804232804
+  },
+  "rows": [
+    {
+      "id": "q42",
+      "type": "fact",
+      "question": "What did Stripe build for its engineers?",
+      "chunkCount": 12,
+      "model": "groq:openai/gpt-oss-120b",
+      "refused": false,
+      "citedEvidence": true,
+      "citationPrecision": 1,
+      "answer": "Stripe created a tool called **Minions** – a custom coding harness built specifically for its engineers and tailored to the Stripe ecosystem[1][7]."
+    },
+    {
+      "id": "q43",
+      "type": "fact",
+      "question": "Which library does the harness engineering demo use to get the basic agent loop?",
+      "chunkCount": 12,
+      "model": "groq:openai/gpt-oss-120b",
+      "refused": false,
+      "citedEvidence": true,
+      "citationPrecision": 1,
+      "answer": "The demo builds the harness with **the Deep Agents library from LangGraph**, which provides the basic agent loop that the tutorial starts from[1]."
+    },
+    {
+      "id": "q44",
+      "type": "fact",
+      "question": "At how many tokens does the summarization step kick in?",
+      "chunkCount": 12,
+      "model": "groq:openai/gpt-oss-120b",
+      "refused": false,
+      "citedEvidence": true,
+      "citationPrecision": 1,
+      "answer": "The summarization middleware is set to activate when the conversation reaches **12,000 tokens** [1][2]."
+    },
+    {
+      "id": "q45",
+      "type": "fact",
+      "question": "What maximum context length does Opus 4.6 have?",
+      "chunkCount": 9,
+      "model": "groq:openai/gpt-oss-120b",
+      "refused": false,
+      "citedEvidence": true,
+      "citationPrecision": 1,
+      "answer": "Opus 4.6’s maximum context length is **1 million tokens**[1][2]."
+    },
+    {
+      "id": "q46",
+      "type": "fact",
+      "question": "Which tool does the video show for automatically testing a website?",
+      "chunkCount": 12,
+      "model": "groq:openai/gpt-oss-120b",
+      "refused": false,
+      "citedEvidence": true,
+      "citationPrecision": 1,
+      "answer": "The video demonstrates **Test Sprite** as the tool that can automatically generate and run tests for a website (e.g., it auto‑creates test cases that verify the pricing page)[1]."
+    },
+    {
+      "id": "q47",
+      "type": "paraphrase",
+      "question": "How do you make the assistant pause for a go-ahead from a person before a risky action?",
+      "chunkCount": 12,
+      "model": "groq:openai/gpt-oss-120b",
+      "refused": false,
+      "citedEvidence": true,
+      "citationPrecision": 0.6666666666666666,
+      "answer": "You add an **“interrupt‑on” (approval) rule** to the harness for any function that could be risky.  \nIn the harness definition you specify the function (e.g., `send_proposal`) and tell the agent that, instead of executing it automatically, it must **pause and ask a human for a go‑ahead**. The human’s response is limited to the allowed decisions (typically *approve* or *reject*), and the agent proceeds only if the answer is *approve*.\n\n- The transcript shows this being done for the “send proposal” action: the developer adds an interrupt‑on argument that forces the agent to request human approval, with the only valid choices being approve or reject [1][5].  \n- This mechanism is part of the broader “boundaries” component, which separates permissions (what tools a role may use) from approvals (when a human must intervene) [2].\n\nSo, to make the assistant pause for a go‑ahead, define an interrupt‑on rule for the risky action and configure the allowed human decisions (approve/reject). This forces the assistant to stop and wait for explicit human consent before proceeding."
+    },
+    {
+      "id": "q48",
+      "type": "paraphrase",
+      "question": "Why might the same AI model feel brilliant in one coding tool and useless in another?",
+      "chunkCount": 12,
+      "model": "groq:openai/gpt-oss-120b",
+      "refused": false,
+      "citedEvidence": true,
+      "citationPrecision": 0.1111111111111111,
+      "answer": "The model itself doesn’t change – the **harness** that wraps it does.  \nA harness is the software layer that connects a large‑language model to tools, files, execution environments, verification steps, and other context. Different coding tools use different harnesses, so the same model can behave very differently:\n\n- **Execution environment & use‑case focus** – One harness may give the model direct access to a company’s production database or a specific set of APIs, while another (e.g., a generic cloud‑based IDE) only offers a limited sandbox. That changes how “useful” the model feels [6][7].\n- **Tool integration & verification** – Some harnesses (like Claude Code or Codex) include task‑dispatching agents and verification loops that keep the model on track; others lack these checks, so the model’s output may appear noisy or useless [4][5][11].\n- **Model‑harness optimization** – Companies often tune a harness for a particular model (e.g., Anthropic optimizing Opus for Claude Code). When the model is run inside a harness it wasn’t tuned for, performance can drop dramatically [3][5].\n- **Context management** – A harness controls how many tools and how much context the model sees. If the harness overloads the model’s context window, the model can “run out of steam,” making it seem ineffective [9].\n- **Performance impact** – Research cited shows the *same* model can be up to six times better simply by building a better harness around it, underscoring how critical the harness is to perceived brilliance [12].\n\nSo, the same AI model may feel brilliant in one coding tool and useless in another because the surrounding harness—its integration, environment, verification, and context handling—greatly influences how well the model can actually help. [1][3][7][12]"
+    },
+    {
+      "id": "q49",
+      "type": "overview",
+      "question": "What is the main point of the video about AI agent harnesses?",
+      "chunkCount": 12,
+      "model": "groq:openai/gpt-oss-120b",
+      "refused": false,
+      "citedEvidence": true,
+      "citationPrecision": 0.2857142857142857,
+      "answer": "The video’s central message is that an **AI‑agent harness** is the software “operating system” that sits around a large language model and turns the raw model into a useful, task‑driven tool.  \n\n- A harness supplies the context, actions, boundaries and persistence a model needs to **carry out whole workflows** (e.g., preparing proposals, accessing company data, running tests) rather than just answering chat questions [4][9][10].  \n- It is what lets the model interact with tools, files, and other systems, and a well‑built harness can make the same model **up to six times more effective** [4].  \n- The video argues that building your own harness is relatively simple, highly valuable for specific use‑cases, and a key skill (called “harness engineering”) that companies are hiring for [7][1][5].  \n\nIn short, the tutorial explains what a harness is, why it’s essential for turning intelligent models into reliable production agents, and encourages viewers to create their own harnesses. [3][4][7]"
+    },
+    {
+      "id": "q50",
+      "type": "overview",
+      "question": "What is harness engineering and why are companies hiring for it?",
+      "chunkCount": 12,
+      "model": "groq:openai/gpt-oss-120b",
+      "refused": false,
+      "citedEvidence": true,
+      "citationPrecision": 0.25,
+      "answer": "**Harness engineering** is the practice of building the “operating system” or software layer that surrounds an AI model so the model can reliably carry out whole‑task workflows in a production environment.  \n- It involves creating a **harness** that connects the model to a company’s data, tools, security policies, memory, scheduling, and other infrastructure, turning a raw API call into an end‑to‑end application [5][7].  \n- The harness supplies the model with the right context, decides what actions it may take, executes those actions, checks permissions, and tracks progress [5][7].  \n\n**Why companies are hiring for it**\n\n- As models become more powerful, businesses expect them to do more than answer questions—they need them to prepare proposals, retrieve information, run code changes, run tests, and complete other full‑task processes [2][5].  \n- The harness is the only part that makes this possible; without it the model is just a small piece of the system [5].  \n- A well‑built harness can dramatically boost performance—research shows the same model can be up to **six times better** when wrapped in a good harness [7].  \n- Many leading firms are already building their own harnesses (e.g., Stripe’s “minions,” Ramp, Spotify, etc.), creating a demand for engineers who can design, implement, and maintain these systems [3][7].  \n\nThus, companies are hiring harness engineers to create, customize, and scale the essential software layer that turns generic AI models into reliable, production‑ready tools for their specific workflows.   [2][5][7]"
+    },
+    {
+      "id": "q51",
+      "type": "list",
+      "question": "What are the four components of the harness that is built step by step?",
+      "chunkCount": 12,
+      "model": "groq:openai/gpt-oss-120b",
+      "refused": false,
+      "citedEvidence": true,
+      "citationPrecision": 1,
+      "answer": "The harness is constructed around **four major components**:\n\n- **Context** – the harness must understand the company (e.g., Northstar), its processes and the information employees already use.  \n- **Actions** – it needs the ability to interact with internal systems (look up customers, query databases, access code, etc.).  \n- **Boundaries** – rules and guardrails that enforce permissions and approvals, ensuring each role can only perform appropriate actions.  \n- **Persistence** – the capability to remember ongoing tasks, store relevant data, and resume work later.\n\nThese four components are introduced and built one by one in the video [4]."
+    },
+    {
+      "id": "q52",
+      "type": "multi-video",
+      "question": "What do the two harness videos say about managing the context window?",
+      "chunkCount": 12,
+      "model": "groq:openai/gpt-oss-120b",
+      "refused": false,
+      "citedEvidence": true,
+      "citationPrecision": 0.14285714285714285,
+      "answer": "**What the two “harness” videos say about managing the context window**\n\n- **First video (sFHXYv7ANkc) – the “theoretical” view**  \n  * The speaker argues that the biggest limitation right now is the size of the model’s context window. If we could give a model a *huge* window (e.g., “100 million tokens” for an Opus 4.7 or GPT 5.5 model) and keep its intelligence, the model would be able to “keep its focus on attention on what details are important” without losing information [1].  \n  * Because of that, the speaker predicts that once the context‑window problem is solved, the whole business of building custom harnesses would “go down the drain” – the model itself would already retain everything it needs [2][7].  \n  * In other words, the video treats a massive context window as the *ultimate* way to manage context, making most harness engineering unnecessary.\n\n- **Second video (mv9kfF_kJd0) – the “practical” implementation**  \n  * The author builds a harness that **explicitly supplies persistent context** (company information, rules, skills) so users don’t have to repeat it each time. This is described as “providing some company information that should always be available… saved in a single file” [4].  \n  * To keep the window from overflowing, a **summarization middleware** is added that triggers when the conversation reaches about **12 000 tokens**, keeping the last six messages unchanged and summarizing the rest. The speaker notes that you can “decide what your summarization scheme is… a quick way to make sure that you’re managing context as well and not letting it overflow” [5].  \n  * The video also frames **context** as one of four core harness components (context, actions, boundaries, persistence) that must be built and maintained [9][12].\n\n**Combined take‑away**\n\n- The first video treats a *very large* context window as the ideal solution that would largely eliminate the need for a harness.  \n- The second video shows how, with today’s limited windows, a harness must **provide static context** and **actively prune or summarize** the conversation (e.g., at a 12 k‑token threshold) to keep the window within limits.  \n\nThus, both videos acknowledge the importance of the context window, but the first sees solving it as a future “silver bullet,” while the second demonstrates concrete techniques for managing it in current systems.   [1][2][7][4][5][9][12]"
+    },
+    {
+      "id": "q53",
+      "type": "multi-video",
+      "question": "Which products does each harness video give as examples of a harness?",
+      "chunkCount": 12,
+      "model": "groq:openai/gpt-oss-120b",
+      "refused": false,
+      "citedEvidence": true,
+      "citationPrecision": 1,
+      "answer": "**Video mv9kfF_kJd0 – “Harness Engineering”**\n\n- **Stripe Minions** – a coding harness built specifically for Stripe’s engineers [1]  \n- **Other company‑specific harnesses** – the speaker notes that companies such as **Ramp** and **Spotify** have built similar internal harnesses [1]  \n\n**Video sFHXYv7ANkc – “AI‑agent Harness”**\n\n- **Claude Code** – described explicitly as a harness that can run multiple models (Sonnet, Opus, Haiku, etc.) [7][9]  \n- **Codex** – also called a harness; it uses OpenAI’s GPT 5.5 [7][9]  \n\nThese are the concrete product examples each video gives as illustrations of what a harness looks like."
+    },
+    {
+      "id": "q54",
+      "type": "fact",
+      "question": "How much long-term debt does Apple have in the stock-picking example?",
+      "chunkCount": 7,
+      "model": "groq:openai/gpt-oss-120b",
+      "refused": false,
+      "citedEvidence": true,
+      "citationPrecision": 1,
+      "answer": "Apple’s long‑term debt is about **$109 billion**[1][2]."
+    },
+    {
+      "id": "q55",
+      "type": "fact",
+      "question": "What does a price to earnings ratio of 20 mean?",
+      "chunkCount": 4,
+      "model": "groq:openai/gpt-oss-120b",
+      "refused": false,
+      "citedEvidence": true,
+      "citationPrecision": 1,
+      "answer": "A price‑to‑earnings (P/E) ratio of 20 means that investors are paying about $20 for every $1 of the company’s earnings – i.e., the stock’s current price is twenty times its earnings per share [1]."
+    },
+    {
+      "id": "q56",
+      "type": "fact",
+      "question": "Which app does the beginner investing walkthrough use?",
+      "chunkCount": 12,
+      "model": "groq:openai/gpt-oss-120b",
+      "refused": false,
+      "citedEvidence": true,
+      "citationPrecision": 0.5,
+      "answer": "The beginner’s step‑by‑step investing walkthrough is done using the **Trading 212 app**[2][11]."
+    }
+  ]
+}

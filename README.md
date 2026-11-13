@@ -72,6 +72,7 @@ npm run eval --workspace server -- --reranker minilm              # re-order res
 npm run eval --workspace server -- --only q42-q86                # score only some questions (ids and ranges)
 npm run eval --workspace server -- --save-baseline               # keep this run as the one to beat
 npm run eval --workspace server -- --against eval/runs/<file>.json   # compare with another saved run
+npm run eval:answers --workspace server -- --reranker bge-m3 --only q42-q56   # answer-level check: refusals and citations (uses answer-model quota)
 npm run eval:compare --workspace server -- <before.json> <after.json>  # compare any two saved runs
 ```
 

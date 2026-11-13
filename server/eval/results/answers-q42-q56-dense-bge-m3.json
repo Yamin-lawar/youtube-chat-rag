@@ -1,0 +1,184 @@
+{
+  "label": "rescore-q42-q56-bge-m3",
+  "commit": "d04999f",
+  "settings": {
+    "search": "dense",
+    "reranker": "bge-m3",
+    "generator": "groq:openai/gpt-oss-120b"
+  },
+  "summary": {
+    "unanswerableRefused": 0,
+    "unanswerable": 0,
+    "answerableRefused": 0,
+    "answerable": 15,
+    "answeredWithEvidence": 15,
+    "citationPrecision": 0.7288888888888889
+  },
+  "rows": [
+    {
+      "id": "q42",
+      "type": "fact",
+      "question": "What did Stripe build for its engineers?",
+      "chunkCount": 12,
+      "model": "groq:openai/gpt-oss-120b",
+      "refused": false,
+      "citedEvidence": true,
+      "citationPrecision": 1,
+      "answer": "Stripe created a custom coding harness called **“Minions”** for its engineers – a harness built specifically around the Stripe ecosystem to help engineers work with the company’s models [1][2]"
+    },
+    {
+      "id": "q43",
+      "type": "fact",
+      "question": "Which library does the harness engineering demo use to get the basic agent loop?",
+      "chunkCount": 12,
+      "model": "groq:openai/gpt-oss-120b",
+      "refused": false,
+      "citedEvidence": true,
+      "citationPrecision": 1,
+      "answer": "The demo builds the harness with **DeepAgents by LangGraph**, which provides the basic agent loop that the rest of the system is layered on top of[1]."
+    },
+    {
+      "id": "q44",
+      "type": "fact",
+      "question": "At how many tokens does the summarization step kick in?",
+      "chunkCount": 12,
+      "model": "groq:openai/gpt-oss-120b",
+      "refused": false,
+      "citedEvidence": true,
+      "citationPrecision": 1,
+      "answer": "The summarization middleware is set to activate when the conversation reaches **12,000 tokens**[1][2]."
+    },
+    {
+      "id": "q45",
+      "type": "fact",
+      "question": "What maximum context length does Opus 4.6 have?",
+      "chunkCount": 12,
+      "model": "groq:openai/gpt-oss-120b",
+      "refused": false,
+      "citedEvidence": true,
+      "citationPrecision": 1,
+      "answer": "Opus 4.6’s maximum context window is about **1 million tokens**[1][2]."
+    },
+    {
+      "id": "q46",
+      "type": "fact",
+      "question": "Which tool does the video show for automatically testing a website?",
+      "chunkCount": 12,
+      "model": "groq:openai/gpt-oss-120b",
+      "refused": false,
+      "citedEvidence": true,
+      "citationPrecision": 1,
+      "answer": "The video demonstrates **Test Sprite** – an AI‑powered testing agent that can automatically generate and run tests for a website (e.g., it created test cases that verified the pricing page was working)[1][4]."
+    },
+    {
+      "id": "q47",
+      "type": "paraphrase",
+      "question": "How do you make the assistant pause for a go-ahead from a person before a risky action?",
+      "chunkCount": 12,
+      "model": "groq:openai/gpt-oss-120b",
+      "refused": false,
+      "citedEvidence": true,
+      "citationPrecision": 0.6666666666666666,
+      "answer": "To make the assistant stop and wait for a human “go‑ahead” before it carries out a risky operation you add an **approval interrupt** to the harness:\n\n* **Define an interrupt point** for the specific tool or function that you consider risky (e.g., `send_proposal`).  \n  In the harness you declare that this function should “ask a human” for approval and that the only allowed responses are **approve** or **reject** — this creates a pause where the model cannot continue until a person decides [1][9].\n\n* **Enable “interrupt‑on” mode** (or similar middleware) so that whenever the agent reaches that checkpoint it automatically prompts the user instead of executing the action directly [1].\n\n* **Treat the approval as a boundary rule**: boundaries are the guardrails that tell the agent when it must stop and request permission. By configuring both **permissions** (what the agent is allowed to do) and **approvals** (which actions need a human go‑ahead), the assistant will only proceed after the user explicitly confirms [5].\n\nIn practice you would:\n\n1. Add the risky tool to the harness with an `interrupt_on` flag.  \n2. Specify the allowed decisions (`approve`, `reject`).  \n3. Wire the interrupt into the agent’s workflow so that execution halts, a prompt is sent to the human, and the agent resumes only after the human’s response.\n\nThis mechanism ensures the assistant cannot perform the risky action on its own and must wait for explicit human consent."
+    },
+    {
+      "id": "q48",
+      "type": "paraphrase",
+      "question": "Why might the same AI model feel brilliant in one coding tool and useless in another?",
+      "chunkCount": 12,
+      "model": "groq:openai/gpt-oss-120b",
+      "refused": false,
+      "citedEvidence": true,
+      "citationPrecision": 0.2,
+      "answer": "The model itself doesn’t change – it’s the **harness** (the software layer that wraps the model) that makes the difference.  \n\n- A large‑language model is just an API that receives tokens and returns tokens; by itself it has no access to files, tools, security checks or verification steps [5][6].  \n- The harness acts like an operating system for the model, connecting it to the data, tools, and workflow of a particular coding environment.  How well that layer is built can boost the same model’s performance by **up to six times** [3].  \n- Different coding tools (e.g., Claude Code, Codex, GitHub Copilot) each have their own harnesses, with distinct ways of dispatching sub‑AIs, tracking work, handling permissions, and providing context.  If a harness is poorly matched to a task, the model may seem “useless”; if the harness is tightly tuned to the ecosystem (e.g., a custom harness built for Stripe’s engineers), the same model can feel “brilliant” [3][12].  \n\nSo the same AI model can appear great in one tool and ineffective in another because the **quality, design, and specialization of the harness surrounding it** vary from tool to tool. [5][8]"
+    },
+    {
+      "id": "q49",
+      "type": "overview",
+      "question": "What is the main point of the video about AI agent harnesses?",
+      "chunkCount": 12,
+      "model": "groq:openai/gpt-oss-120b",
+      "refused": false,
+      "citedEvidence": true,
+      "citationPrecision": 0.4,
+      "answer": "The video’s central message is that an **AI‑agent “harness” is the software layer (or operating‑system‑like wrapper) that sits around a large language model and makes it useful for real‑world tasks**.  \n\n- A harness supplies the context, actions, boundaries and persistence a model needs to work reliably in a production environment, turning a raw API into a task‑oriented system[3][7].  \n- Without a harness the model is just a “pure API” that can answer chat questions but can’t reliably interact with tools, data or company processes[10].  \n- Building a good harness can dramatically boost performance (research shows the same model can be up to 6× better) and is why many companies are creating their own custom harnesses for their ecosystems[8].  \n- The video also stresses that harnesses explain why a model can appear both good and bad at the same time—the surrounding harness determines how the model behaves in practice[1].  \n\nIn short, the video argues that **the key to making AI agents effective is designing and deploying a harness around the model, and that anyone can build their own to unlock far greater utility**."
+    },
+    {
+      "id": "q50",
+      "type": "overview",
+      "question": "What is harness engineering and why are companies hiring for it?",
+      "chunkCount": 12,
+      "model": "groq:openai/gpt-oss-120b",
+      "refused": false,
+      "citedEvidence": true,
+      "citationPrecision": 0.25,
+      "answer": "**Harness engineering** is the practice of designing and building the software “harness” – essentially an operating‑system‑like layer – that sits around an AI model and lets it execute real‑world, end‑to‑end tasks reliably in production.  \n- The harness supplies the model with the right context, connects it to internal data, tools and permissions, manages memory, approvals, scheduling, and tracks work as it proceeds [1][5].  \n- It turns a raw language‑model API into a usable application (e.g., a coding harness for engineers, a proposal‑writing assistant for sales, etc.) [1][4].\n\n**Why companies are hiring for it**  \n- Companies want AI to do more than answer chat questions; they need it to complete whole workflows such as preparing proposals, running tests, or modifying code [1][6].  \n- A well‑built harness can boost the same model’s performance dramatically – research shows the same model can be up to **six times better** when wrapped in a good harness [5].  \n- Many firms are building their own custom harnesses to fit their specific ecosystems (e.g., Stripe’s “minions,” Ramp, Spotify, etc.), so they need engineers who can create and maintain those systems [4][5].  \n\nThus, harness engineering is the skill of constructing the surrounding software that makes AI models production‑ready, and companies are hiring for it to unlock reliable, high‑performing AI‑driven automation tailored to their own products and workflows. [1][4][5]"
+    },
+    {
+      "id": "q51",
+      "type": "list",
+      "question": "What are the four components of the harness that is built step by step?",
+      "chunkCount": 12,
+      "model": "groq:openai/gpt-oss-120b",
+      "refused": false,
+      "citedEvidence": true,
+      "citationPrecision": 0.6666666666666666,
+      "answer": "The harness is built around **four core components**:\n\n1. **Context** – gives the model an understanding of the company (Northstar), its processes and the information employees normally need to repeat.  \n2. **Actions** – lets the harness interact with internal systems (e.g., look up customer data, query databases, call APIs).  \n3. **Boundaries** – defines permissions and approval rules so the harness knows what it may do and when it must stop for review.  \n4. **Persistence** – stores the state of longer‑running tasks so users can pause and later resume work with the same context.\n\nThese four components are introduced and built one‑by‑one throughout the video [1][2][3]."
+    },
+    {
+      "id": "q52",
+      "type": "multi-video",
+      "question": "What do the two harness videos say about managing the context window?",
+      "chunkCount": 12,
+      "model": "groq:openai/gpt-oss-120b",
+      "refused": false,
+      "citedEvidence": true,
+      "citationPrecision": 0.25,
+      "answer": "**What the two harness videos say about managing the context window**\n\n- **Both videos treat the context‑window size as the main technical bottleneck for AI‑driven harnesses.**  \n  * In the “AI agent harness” video (sFHXYv7ANkc) the speaker repeatedly notes that once we have models with a huge, loss‑less context window (e.g., “100 million‑token” windows), the need for custom harnesses would “go down the drain” because the model could keep track of everything itself [1][2][4].  \n\n- **The “harness engineering” video (mv9kfF_kJd0) shows a concrete way to cope with the current limited window.**  \n  * It introduces a **summarization middleware** that automatically triggers when the token count reaches about **12 000 tokens**, keeps the last six messages unchanged, and summarizes older parts of the conversation. This prevents the context from overflowing while preserving the most recent, relevant information [7].\n\n- **Together, the messages imply two complementary strategies:**  \n  1. **Long‑term vision:** Build or wait for models with very large, loss‑less context windows, which would reduce the reliance on external harness logic [1][2][4].  \n  2. **Short‑term practice:** Use techniques like token‑based summarization (e.g., at 12 k tokens) and persistence of key state to stay within the existing window limits [7].\n\nThus, the videos explain that managing the context window is essential now (via summarization/persistence) and that solving the window‑size problem itself would fundamentally change how harnesses are used."
+    },
+    {
+      "id": "q53",
+      "type": "multi-video",
+      "question": "Which products does each harness video give as examples of a harness?",
+      "chunkCount": 12,
+      "model": "groq:openai/gpt-oss-120b",
+      "refused": false,
+      "citedEvidence": true,
+      "citationPrecision": 1,
+      "answer": "**Video mv9kfF_kJd0 – “Harness Engineering”**\n\n- **Stripe Minions** – a coding‑harness built specifically for Stripe’s engineers[1]  \n- **ChatGPT** – everyday product that has a harness layer around the model[4]  \n- **Claude Code** – another product that includes a harness connecting the model to tools[4]  \n- **Codex** – likewise described as having a harness layer[4]\n\n**Video sFHXYv7ANkc – “AI Agent Harness”**\n\n- **Claude Code** – explicitly called a harness (“Claude Code is a harness”)[7]  \n- **Codex** – also explicitly called a harness (“Codex is also a harness”)[7]\n\nThese are the products each video cites as concrete examples of a harness."
+    },
+    {
+      "id": "q54",
+      "type": "fact",
+      "question": "How much long-term debt does Apple have in the stock-picking example?",
+      "chunkCount": 12,
+      "model": "groq:openai/gpt-oss-120b",
+      "refused": false,
+      "citedEvidence": true,
+      "citationPrecision": 1,
+      "answer": "Apple’s long‑term debt is about **$109 billion**[1][2]."
+    },
+    {
+      "id": "q55",
+      "type": "fact",
+      "question": "What does a price to earnings ratio of 20 mean?",
+      "chunkCount": 12,
+      "model": "groq:openai/gpt-oss-120b",
+      "refused": false,
+      "citedEvidence": true,
+      "citationPrecision": 1,
+      "answer": "A price‑to‑earnings (P/E) ratio of 20 means that investors are paying about $20 for each $1 of the company’s earnings. In other words, the stock’s current price is twenty times its earnings per share [1]."
+    },
+    {
+      "id": "q56",
+      "type": "fact",
+      "question": "Which app does the beginner investing walkthrough use?",
+      "chunkCount": 12,
+      "model": "groq:openai/gpt-oss-120b",
+      "refused": false,
+      "citedEvidence": true,
+      "citationPrecision": 0.5,
+      "answer": "The beginner’s step‑by‑step investing walkthrough is done using the **Trading 212 app**[1][12]."
+    }
+  ]
+}

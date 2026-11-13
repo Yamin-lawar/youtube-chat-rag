@@ -6,18 +6,19 @@ How the numbers are produced is in [EVAL.md](EVAL.md). The per-block notes (what
 
 ## Summary
 
-| #    | Experiment                                                | Question                                                           | Result                                                                                        | Status                   |
-| ---- | --------------------------------------------------------- | ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- | ------------------------ |
-| E1   | Distance metrics                                          | Does cosine, dot product or Euclidean matter?                      | No, the three return almost the same chunks                                                   | Done, cosine kept        |
-| E2   | Retrieval settings (top-k, margin)                        | Why was an answer one sentence long?                               | The 0.08 margin cut useful chunks; 12 and 0.12 fixed it                                       | Done, one question only  |
-| E3   | Eval set v1 and first baseline                            | How good is dense search?                                          | MRR 0.841, but the set was too easy                                                           | Done                     |
-| E4   | Eval set v2 (long videos)                                 | Can a harder set separate strategies?                              | Partly: top 1, top 3, MRR, nDCG can; hit rate at 5 still 100%                                 | Done, baseline saved     |
-| E5   | Reproducibility checks                                    | Is the eval deterministic and refactor-safe?                       | Yes, four re-runs gave identical numbers                                                      | Done                     |
-| E6   | Hybrid search v1 (dense + BM25, RRF)                      | Does adding exact-word search help?                                | No: MRR 0.818 to 0.815, paraphrases much worse                                                | Done, not adopted        |
-| E7   | Weighted RRF (sparse weight 0 to 1)                       | Does a smaller keyword vote fix the paraphrase drop?               | Paraphrase drop shrinks as the weight falls; best MRR +0.02 (later shown to be noise, see E8) | Done, not adopted        |
-| E8   | Eval set v3 (45 new questions) and a held-out check of E7 | Does the weight chosen in E7 still help on questions it never saw? | No: MRR 0.801 (dense) against 0.779 (weight 0.3), and worse with more weight                  | Done, new baseline saved |
-| E9   | Reranker (cross-encoder on the top 20)                    | Does reading question and chunk together fix the order?            | minilm: worse on both sets. bge-m3: MRR 0.801 to 0.888 on held-out, flat on old set           | Done, bge-m3 promising   |
-| E10+ | Stemming, ...                                             | See "Planned"                                                      |                                                                                               | Not run yet              |
+| #    | Experiment                                                | Question                                                           | Result                                                                                        | Status                    |
+| ---- | --------------------------------------------------------- | ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- | ------------------------- |
+| E1   | Distance metrics                                          | Does cosine, dot product or Euclidean matter?                      | No, the three return almost the same chunks                                                   | Done, cosine kept         |
+| E2   | Retrieval settings (top-k, margin)                        | Why was an answer one sentence long?                               | The 0.08 margin cut useful chunks; 12 and 0.12 fixed it                                       | Done, one question only   |
+| E3   | Eval set v1 and first baseline                            | How good is dense search?                                          | MRR 0.841, but the set was too easy                                                           | Done                      |
+| E4   | Eval set v2 (long videos)                                 | Can a harder set separate strategies?                              | Partly: top 1, top 3, MRR, nDCG can; hit rate at 5 still 100%                                 | Done, baseline saved      |
+| E5   | Reproducibility checks                                    | Is the eval deterministic and refactor-safe?                       | Yes, four re-runs gave identical numbers                                                      | Done                      |
+| E6   | Hybrid search v1 (dense + BM25, RRF)                      | Does adding exact-word search help?                                | No: MRR 0.818 to 0.815, paraphrases much worse                                                | Done, not adopted         |
+| E7   | Weighted RRF (sparse weight 0 to 1)                       | Does a smaller keyword vote fix the paraphrase drop?               | Paraphrase drop shrinks as the weight falls; best MRR +0.02 (later shown to be noise, see E8) | Done, not adopted         |
+| E8   | Eval set v3 (45 new questions) and a held-out check of E7 | Does the weight chosen in E7 still help on questions it never saw? | No: MRR 0.801 (dense) against 0.779 (weight 0.3), and worse with more weight                  | Done, new baseline saved  |
+| E9   | Reranker (cross-encoder on the top 20)                    | Does reading question and chunk together fix the order?            | minilm: worse on both sets. bge-m3: MRR 0.801 to 0.888 on held-out, flat on old set           | Done, bge-m3 promising    |
+| E10  | Answer-level check of the reranker                        | Does the reranker change refusals or answers, not just ranks?      | No change on 8 unanswerable and 15 answerable questions; only 23 of 86 could be run (quota)   | Done in part, quota-bound |
+| E11+ | Stemming, ...                                             | See "Planned"                                                      |                                                                                               | Not run yet               |
 
 The app still uses **dense search with no reranker** (`SEARCH_STRATEGY` defaults to `dense`, `RERANKER` to `none`). The bge-m3 reranker (E9) is the first thing that looks better, but it costs about 4 seconds a question and I have not measured answer quality, so it is opt-in for now.
 
@@ -249,11 +250,54 @@ Saved separately as `new45-dense-minilm` and `new45-dense-bge-m3` runs. The eval
 - **Conclusion:** the minilm reranker is **rejected**. The bge-m3 reranker is **promising and not adopted yet**. It sharpens the first result (hit@1 +12 points) but thins the tail, and it is slow. `RERANKER` stays `none` by default.
 - **Caveats (important):**
   - **The answer model sees 12 chunks, not one.** What matters for the final answer is whether the evidence is in those 12. With bge-m3 the share of evidence quotes kept in the 12 went down slightly, 0.981 to 0.968 (the dense baseline kept about 10.5 chunks on average because of its margin filter, so this is not exactly like for like). So **the retrieval gain at rank 1 may not turn into better answers**. Answer quality was not measured.
-  - **"No answer" is untested with a reranker.** Refusing relied on cosine scores and the margin filter, which are off here. I have not checked what the reranker does with the 8 unanswerable questions.
+  - **"No answer" was untested with a reranker** (checked in E10: no change on the 8 unanswerable questions). The app does not refuse on a score: the answer model refuses by following the prompt, and the margin filter only trims chunks.
   - **Only the top 20 candidates are reranked.** A right chunk outside the first 20 cannot be rescued. I did not try 10 or 30 candidates.
   - **41 held-out questions is small.** 0.087 MRR is a handful of questions. The reasons to believe it are hit@1, MRR and nDCG all rising and nothing getting worse by MRR on either set. The reasons for doubt are the old-set MRR being flat and the tail getting worse.
   - **The 8-bit (q8) bge-m3 model is a lossy version.** I did not compare it with the full-precision one.
   - **Same warning as before:** the model was tried once with default settings. I did not tune anything for it, which is on purpose, so the numbers are not flattered.
+
+## E10. Answer-level check of the reranker, and the "no answer" question
+
+- **Why:** E9 measured where the right chunk ranks. The answer model reads 12 chunks, not one, so a better rank 1 might not change the answer. And I wanted to know whether the reranker changes what the app does with questions the videos cannot answer.
+- **A correction first.** I had assumed the app refuses "no answer" questions using the cosine score. It does not. `retrieveChunks` only trims weak chunks (the 0.12 margin) and never refuses. The refusal comes from the answer model following one prompt rule ("if the excerpts do not contain the answer, say you could not find it"). So the reranker can only matter through which 12 chunks the model sees and in what order. The reranked search always keeps 12, while dense keeps about 10.5 on answerable questions (and 12 on unanswerable ones, where all scores are low and close together).
+- **What I built:** `npm run eval:answers --workspace server`. It runs the app's real path (retrieve, then the real prompt and answer model) for each question and records:
+  - **Refused?** The answer says it could not find it (a phrase check on the first 300 characters). Right for the 8 unanswerable questions, a false refusal for answerable ones. I read all 16 unanswerable answers: the check matched all 14 refusals and not the 2 real answers.
+  - **Cited the right passage?** For answerable questions that were answered: does at least one cited excerpt overlap a labelled quote, by the same time-overlap rule as the retrieval eval?
+  - **Citation precision:** of the excerpts cited, the share that overlap a labelled quote. Stricter, because citing 9 excerpts and hitting one still counts as a hit above.
+  - **No LLM judge.** A judge would use up the same small free quota again and would add its own errors. Both checks are deterministic, so a re-run on cached answers gives the same numbers. The cost is that citing the right passage does not prove the claim is correct.
+- **How it stays affordable:** answers are cached by the exact prompt (so a stopped run resumes and a re-score is free), a pre-flight line prints the calls and tokens, it waits out per-minute limits and 503s, and a daily limit stops it cleanly. It uses one provider only, so a mid-run fallback cannot mix two models into one comparison.
+- **Setup:** answer model `openai/gpt-oss-120b` on Groq (the app's first choice, temperature 0.2), dense search, 12 chunks. Each answer was written once and cached, so both configurations are one sample each of the model's output.
+- **Results** (runs in `server/eval/results/answers-*.json`, answers included):
+
+| Questions                  | Measure                              | dense | dense + bge-m3 |
+| -------------------------- | ------------------------------------ | ----- | -------------- |
+| 8 unanswerable             | refused (correct)                    | 7     | 7              |
+|                            | answered (q85, the same one)         | 1     | 1              |
+| 15 answerable (q42 to q56) | wrongly refused                      | 0     | 0              |
+|                            | answered and cited the right passage | 15    | 15             |
+|                            | citation precision                   | 0.73  | 0.73           |
+|                            | chunks given to the model (average)  | 10.9  | 12.0           |
+|                            | average answer length (characters)   | 671   | 609            |
+|                            | average citations per answer         | 3.1   | 2.7            |
+
+The 15 are a mix of types: 8 fact, 2 paraphrase, 2 overview, 1 list, 2 multi-video. Under dense, q54 and q55 were given only 7 and 4 chunks by the margin filter.
+
+- **What this shows:**
+  - **The reranker does not break refusals.** Same 7 refused, same one answered, and the refusals read almost word for word the same. Even with 12 chunks (more weak ones), the model did not start inventing answers.
+  - **The reranker does not change answer grounding on these 15.** Both cite a correct passage every time, with the same precision. bge-m3 cites lower-numbered excerpts (for example [1][2] instead of [1][7]), which is the reordering showing, not a better answer.
+  - **It does not show the E9 gain turning into better answers either.** These 15 are a ceiling: 100% either way, so the check cannot separate the two. The rank-1 gain is not shown to matter for answers.
+  - **q85** ("What do the videos say about investing in real estate?") was answered by both with a farm-ownership analogy from the videos, hedged as "only touch on". The label (unanswerable) is debatable, and I left it unchanged rather than edit it after seeing the result.
+- **What I could not run, and why:** only 23 of 86 questions have paired answers.
+  - **Groq** allows 200,000 tokens per rolling 24 hours for this model (and 8,000 a minute). The prompts are about 3,300 tokens, so that is about 50 answers a day. My 60 answers used it all. A full run is about 255,000 input tokens per configuration, roughly 3 days of free Groq for both.
+  - **Gemini** (the fallback) returned a 503 "high demand", then a dropped connection, then a 429 quota error on generation.
+  - So q57 to q86 and the old q01 to q41 have no paired answers. The partial dense answers for q57 to q71 (14 of 15) are cached. Re-running the same commands resumes and costs only the missing answers.
+- **Conclusion:** no sign the reranker harms refusals or grounded answers, and no sign it improves them, on the 23 questions that could be run. The decision about bge-m3 therefore still rests on E9 (better top result) against its cost (about 4 seconds a question, 561 MB). It stays opt-in.
+- **Caveats:**
+  - **Small and easy.** 15 answerable and 8 unanswerable questions, and the answerable ones were at 100% for both. A difference of one or two questions would have gone unseen.
+  - **One sample of the answer.** Temperature 0.2 and one answer per question, so a single changed answer is not evidence.
+  - **Proxy metrics.** "Cited a passage with the quote" is not "the answer is correct". I only read the 16 unanswerable answers and the lengths and citations of the 15, not each answerable answer in full.
+  - **One answer model.** Another model (the Gemini fallback) may refuse differently.
+  - **Refusal check is a phrase check.** It matched every case I read, but a model that refuses in new words would be missed.
 
 ## Planned (not run yet)
 
@@ -265,7 +309,7 @@ Each is a small change judged on the same eval. Add a result below when it is ru
 | Fix Hindi (Devanagari) vowel marks in the tokenizer | Strip accents only from Latin letters, keep the marks of other scripts; rebuild the sparse vectors (found in E8)   |
 | Stemming in the tokenizer                           | "customer"/"customers", "pay"/"paid" match, so the sparse list gets better                                         |
 | Reranker follow-ups                                 | Candidates 10 or 30 instead of 20; hybrid plus bge-m3; bge-m3 at full precision; a cut-off so the tail is not lost |
-| Answer-level check of the reranker                  | Does the answer improve, not just rank 1? Include the 8 unanswerable questions (no-answer behaviour)               |
+| Finish the answer-level check (E10)                 | The other 63 answerable questions, dense against bge-m3; needs about 3 days of free Groq or a paid tier            |
 | Query optimisation                                  | Do rewritten or expanded questions retrieve better than the raw question?                                          |
 | Chunking variants                                   | Sentence-aware, time-window, different sizes, parent-child; needs a collection per strategy                        |
 | 768 against 3072 dimensions                         | Does the smaller embedding lose quality?                                                                           |
@@ -300,6 +344,9 @@ Each is a small change judged on the same eval. Add a result below when it is ru
 - _Why didn't you use Cohere Rerank?_ It is API-only, so it cannot be self-hosted, and its free trial allows about 10 calls a minute, which makes an 86-question eval slow. A local model is deterministic, needs no key and is free.
 - _Did the reranker help?_ It depends on the model. MiniLM made things worse on both question sets (MRR down 0.02 and 0.045). The large multilingual bge-m3 raised hit@1 from 69% to 81% and MRR from 0.809 to 0.854, with most of the gain on the held-out set (0.801 to 0.888), but top-3 and top-5 hit rates fell a few points, it takes about 4 s a question and I have not shown that answers improve. So I call it promising, not adopted.
 - _Why did the small reranker lose?_ Probably because it was trained on English web search queries and short passages and ours are spoken-style questions over caption text. I did not verify the reason, only that the loss is the same direction on two question sets.
+- _How does your app say "I don't know"?_ Not with a score. The answer model refuses by following one prompt rule, and the retrieval margin only trims weak chunks. I checked this on 8 questions the videos cannot answer: 7 of 8 were refused, with and without the reranker. The eighth (real estate, answered through a farm analogy) is a debatable label.
+- _Did the reranker improve the answers?_ I could not show it. On the 15 answerable questions I could run, both versions answered all of them and cited a correct passage every time, so the check was at its ceiling. I ran out of free answer-model quota (Groq 200,000 tokens a day, Gemini 429) before the other 63. That is a limit of the free tier and the sample size, and I say so.
+- _Why no LLM judge for the answers?_ It would use the same small free quota and add its own errors. I used checks that are deterministic (did it refuse, did it cite a passage that holds the labelled quote), at the price of not verifying the claim itself.
 - _What would you do differently?_ A bigger question set written by someone who has not read the videos. Now one question is 1.3 points, which is better, but a change of one or two questions is still noise, so only consistent moves across several metrics and across two sets mean something.
 - _Is your eval deterministic?_ Yes. Identical numbers across four re-runs (E5). The noise that is left is the question set size.
 - _Why did you build the eval yourself and not use Ragas, DeepEval or LangSmith?_ Ragas and DeepEval are Python, and LangSmith is hosted and would send data out. The stack is TypeScript and free tiers, and the retrieval metrics are simple to write and to explain.
@@ -308,20 +355,22 @@ Each is a small change judged on the same eval. Add a result below when it is ru
 
 **Numbers worth remembering**
 
-| What                             | Number                                                           |
-| -------------------------------- | ---------------------------------------------------------------- |
-| Eval set                         | 86 questions, 78 answerable, 12 videos                           |
-| Baseline (dense)                 | MRR 0.809, hit rate 69% at 1, 91% at 3                           |
-| Hit rate at top 5                | 97% (100% at top 10, too flat to compare on)                     |
-| Weakest question type            | Overview, MRR 0.528 (multi-video 0.643)                          |
-| One question is worth            | 1.3 points of hit rate                                           |
-| Hybrid v1 (equal weights)        | MRR 0.815, paraphrase MRR 0.857 to 0.671                         |
-| Weighted RRF (weight 0.3)        | Old set +0.021 MRR, new set -0.022: not real                     |
-| Reranker minilm / bge-m3         | MRR 0.776 / 0.854 (dense 0.809); about 0.25 s / 3.9 s a question |
-| bge-m3 on held-out questions     | MRR 0.801 to 0.888, hit@1 68% to 85%                             |
-| Chunks                           | 375 in total, about 1000 characters                              |
-| BM25 / RRF constants             | k1 1.2, b 0.75, RRF k 60                                         |
-| Gemini against Groq, same prompt | 193 s against 0.96 s                                             |
+| What                                | Number                                                           |
+| ----------------------------------- | ---------------------------------------------------------------- |
+| Eval set                            | 86 questions, 78 answerable, 12 videos                           |
+| Baseline (dense)                    | MRR 0.809, hit rate 69% at 1, 91% at 3                           |
+| Hit rate at top 5                   | 97% (100% at top 10, too flat to compare on)                     |
+| Weakest question type               | Overview, MRR 0.528 (multi-video 0.643)                          |
+| One question is worth               | 1.3 points of hit rate                                           |
+| Hybrid v1 (equal weights)           | MRR 0.815, paraphrase MRR 0.857 to 0.671                         |
+| Weighted RRF (weight 0.3)           | Old set +0.021 MRR, new set -0.022: not real                     |
+| Reranker minilm / bge-m3            | MRR 0.776 / 0.854 (dense 0.809); about 0.25 s / 3.9 s a question |
+| bge-m3 on held-out questions        | MRR 0.801 to 0.888, hit@1 68% to 85%                             |
+| Answer check (Groq, bge-m3 vs none) | Unanswerable 7 of 8 refused both; 15 answerable 15/15 both       |
+| Groq free answer quota              | 200,000 tokens a day, about 50 answers                           |
+| Chunks                              | 375 in total, about 1000 characters                              |
+| BM25 / RRF constants                | k1 1.2, b 0.75, RRF k 60                                         |
+| Gemini against Groq, same prompt    | 193 s against 0.96 s                                             |
 
 ## How to add an entry
 

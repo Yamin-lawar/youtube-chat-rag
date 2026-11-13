@@ -1,0 +1,107 @@
+{
+  "label": "rescore-unans-bge-m3",
+  "commit": "d04999f",
+  "settings": {
+    "search": "dense",
+    "reranker": "bge-m3",
+    "generator": "groq:openai/gpt-oss-120b"
+  },
+  "summary": {
+    "unanswerableRefused": 7,
+    "unanswerable": 8,
+    "answerableRefused": 0,
+    "answerable": 0,
+    "answeredWithEvidence": 0,
+    "citationPrecision": null
+  },
+  "rows": [
+    {
+      "id": "q24",
+      "type": "unanswerable",
+      "question": "What did Mark Zuckerberg say about Meta's AI plans?",
+      "chunkCount": 12,
+      "model": "groq:openai/gpt-oss-120b",
+      "refused": true,
+      "citedEvidence": null,
+      "citationPrecision": null,
+      "answer": "I could not find any mention of Mark Zuckerberg’s comments about Meta’s AI plans in the provided transcript excerpts."
+    },
+    {
+      "id": "q25",
+      "type": "unanswerable",
+      "question": "What is the current price of Tesla stock?",
+      "chunkCount": 12,
+      "model": "groq:openai/gpt-oss-120b",
+      "refused": true,
+      "citedEvidence": null,
+      "citationPrecision": null,
+      "answer": "I could not find the current price of Tesla stock in the provided transcript excerpts."
+    },
+    {
+      "id": "q32",
+      "type": "unanswerable",
+      "question": "What did Howard Marks say about investing in cryptocurrency?",
+      "chunkCount": 12,
+      "model": "groq:openai/gpt-oss-120b",
+      "refused": true,
+      "citedEvidence": null,
+      "citationPrecision": null,
+      "answer": "I could not find any mention of Howard Marks’s comments on cryptocurrency in the provided transcript excerpts."
+    },
+    {
+      "id": "q40",
+      "type": "unanswerable",
+      "question": "What does Andrew Ng say about quantum computing?",
+      "chunkCount": 12,
+      "model": "groq:openai/gpt-oss-120b",
+      "refused": true,
+      "citedEvidence": null,
+      "citationPrecision": null,
+      "answer": "I could not find any mention of Andrew Ng’s comments on quantum computing in the provided transcript excerpts."
+    },
+    {
+      "id": "q83",
+      "type": "unanswerable",
+      "question": "Which Gemini model does the tutorial use for embeddings?",
+      "chunkCount": 12,
+      "model": "groq:openai/gpt-oss-120b",
+      "refused": true,
+      "citedEvidence": null,
+      "citationPrecision": null,
+      "answer": "I could not find any mention of a Gemini model being used for embeddings in the provided video excerpts. The transcript only refers to OpenAI embedding models such as “text‑embedding‑3‑large.”"
+    },
+    {
+      "id": "q84",
+      "type": "unanswerable",
+      "question": "How much does it cost per month to run the harness on Kubernetes?",
+      "chunkCount": 12,
+      "model": "groq:openai/gpt-oss-120b",
+      "refused": true,
+      "citedEvidence": null,
+      "citationPrecision": null,
+      "answer": "I could not find any information in the provided transcript excerpts about the monthly cost of running the harness on Kubernetes."
+    },
+    {
+      "id": "q85",
+      "type": "unanswerable",
+      "question": "What do the videos say about investing in real estate?",
+      "chunkCount": 12,
+      "model": "groq:openai/gpt-oss-120b",
+      "refused": false,
+      "citedEvidence": null,
+      "citationPrecision": null,
+      "answer": "The videos only touch on real‑estate investing in the context of using a farm as an analogy for buying a business. They explain that:\n\n* When you “buy a farm” you should treat it like any other business – look at the size of the property, the crops you can grow, the expected revenue per acre, the operating costs, and the resulting free‑cash‑flow stream. The idea is to buy a solid, cash‑generating asset and hold it for the long run [6][10].\n* The speaker stresses that this approach isn’t complicated: just evaluate the economics of the property the way you would evaluate a company’s financial picture, and focus on the long‑term value rather than short‑term market moves [6][10].\n\nNo other excerpts discuss real‑estate investing. [6][10]"
+    },
+    {
+      "id": "q86",
+      "type": "unanswerable",
+      "question": "What did Elon Musk say about nuclear fusion?",
+      "chunkCount": 12,
+      "model": "groq:openai/gpt-oss-120b",
+      "refused": true,
+      "citedEvidence": null,
+      "citationPrecision": null,
+      "answer": "I could not find any mention of Elon Musk’s comments about nuclear fusion in the provided transcript excerpts."
+    }
+  ]
+}

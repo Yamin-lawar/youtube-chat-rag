@@ -1,0 +1,107 @@
+{
+  "label": "rescore-unans-none",
+  "commit": "d04999f",
+  "settings": {
+    "search": "dense",
+    "reranker": "none",
+    "generator": "groq:openai/gpt-oss-120b"
+  },
+  "summary": {
+    "unanswerableRefused": 7,
+    "unanswerable": 8,
+    "answerableRefused": 0,
+    "answerable": 0,
+    "answeredWithEvidence": 0,
+    "citationPrecision": null
+  },
+  "rows": [
+    {
+      "id": "q24",
+      "type": "unanswerable",
+      "question": "What did Mark Zuckerberg say about Meta's AI plans?",
+      "chunkCount": 12,
+      "model": "groq:openai/gpt-oss-120b",
+      "refused": true,
+      "citedEvidence": null,
+      "citationPrecision": null,
+      "answer": "I could not find any mention of Mark Zuckerberg’s comments about Meta’s AI plans in the provided transcript excerpts."
+    },
+    {
+      "id": "q25",
+      "type": "unanswerable",
+      "question": "What is the current price of Tesla stock?",
+      "chunkCount": 12,
+      "model": "groq:openai/gpt-oss-120b",
+      "refused": true,
+      "citedEvidence": null,
+      "citationPrecision": null,
+      "answer": "I could not find the current price of Tesla stock in the provided transcript excerpts."
+    },
+    {
+      "id": "q32",
+      "type": "unanswerable",
+      "question": "What did Howard Marks say about investing in cryptocurrency?",
+      "chunkCount": 12,
+      "model": "groq:openai/gpt-oss-120b",
+      "refused": true,
+      "citedEvidence": null,
+      "citationPrecision": null,
+      "answer": "I could not find any statement from Howard Marks about investing in cryptocurrency in the provided transcript excerpts. None of the excerpts mention cryptocurrency or related comments."
+    },
+    {
+      "id": "q40",
+      "type": "unanswerable",
+      "question": "What does Andrew Ng say about quantum computing?",
+      "chunkCount": 12,
+      "model": "groq:openai/gpt-oss-120b",
+      "refused": true,
+      "citedEvidence": null,
+      "citationPrecision": null,
+      "answer": "I could not find any mention of quantum computing in the provided transcript excerpts."
+    },
+    {
+      "id": "q83",
+      "type": "unanswerable",
+      "question": "Which Gemini model does the tutorial use for embeddings?",
+      "chunkCount": 12,
+      "model": "groq:openai/gpt-oss-120b",
+      "refused": true,
+      "citedEvidence": null,
+      "citationPrecision": null,
+      "answer": "I could not find any mention of a Gemini model being used for embeddings in the provided video excerpts. The transcript only refers to OpenAI’s text‑embedding‑3‑large (or “text embedding free large”) model for generating embeddings."
+    },
+    {
+      "id": "q84",
+      "type": "unanswerable",
+      "question": "How much does it cost per month to run the harness on Kubernetes?",
+      "chunkCount": 12,
+      "model": "groq:openai/gpt-oss-120b",
+      "refused": true,
+      "citedEvidence": null,
+      "citationPrecision": null,
+      "answer": "I could not find any information in the provided transcript excerpts about the monthly cost of running the harness on Kubernetes."
+    },
+    {
+      "id": "q85",
+      "type": "unanswerable",
+      "question": "What do the videos say about investing in real estate?",
+      "chunkCount": 12,
+      "model": "groq:openai/gpt-oss-120b",
+      "refused": false,
+      "citedEvidence": null,
+      "citationPrecision": null,
+      "answer": "The videos use a farm‑ownership example to illustrate how a real‑estate investment should be thought of – not as a speculative purchase, but as buying a business:\n\n* **Treat the property like a business** – When you “buy a farm” you should look at the same things you would evaluate in a company: the size of the asset (acres), the revenue each acre can generate, the operating costs, and the resulting free‑cash‑flow stream.  In other words, you are buying a piece of a business, not just land [11].\n\n* **Focus on fundamentals, not hype** – The speaker says that investing isn’t complicated; you want “good businesses that are financially sound and play the long game.”  The farm analogy is used to show that the same disciplined, fundamentals‑based approach applies to real‑estate investments [5].\n\n* **Regular monitoring** – Just as a farmer checks the corn every few weeks, a real‑estate investor should regularly monitor the performance of the property rather than obsess over short‑term price swings [5].\n\nSo, according to the videos, investing in real estate (illustrated by buying a farm) should be approached like buying a solid, cash‑flow‑generating business, with careful analysis of earnings, costs, and ongoing performance. [5][11]"
+    },
+    {
+      "id": "q86",
+      "type": "unanswerable",
+      "question": "What did Elon Musk say about nuclear fusion?",
+      "chunkCount": 12,
+      "model": "groq:openai/gpt-oss-120b",
+      "refused": true,
+      "citedEvidence": null,
+      "citationPrecision": null,
+      "answer": "I could not find any mention of Elon Musk’s comments on nuclear fusion in the provided transcript excerpts."
+    }
+  ]
+}
