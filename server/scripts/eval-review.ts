@@ -13,9 +13,11 @@ import { config } from '../src/config.js';
 import { chunkCoversSpan, findEvidenceSpans } from '../src/eval/evidence.js';
 import { loadQuestions } from '../src/eval/questions.js';
 import type { TimeSpan } from '../src/eval/types.js';
+import { CachingEmbedder } from '../src/rag/embeddings/cachingEmbedder.js';
 import { EMBEDDING_DIMENSIONS, GeminiEmbedder } from '../src/rag/embeddings/embedder.js';
 import { formatTimestamp } from '../src/rag/generation/prompt.js';
 import { DEFAULT_TOP_K, retrieveChunks } from '../src/rag/retrieval/retriever.js';
+import { createReranker } from '../src/rag/rerank/models.js';
 import { createSearch } from '../src/rag/search/createSearch.js';
 import { QdrantChunkStore, type ChunkPayload } from '../src/rag/vectorstore/qdrantChunkStore.js';
 
@@ -28,12 +30,17 @@ const store = new QdrantChunkStore(
   `chunks_${new RecursiveChunker().name}`,
   EMBEDDING_DIMENSIONS,
 );
-const embedder = new GeminiEmbedder(config.GOOGLE_API_KEY);
+// Shares the eval's cache of question embeddings, so reviewing a label costs no API call.
+const embedder = new CachingEmbedder(
+  new GeminiEmbedder(config.GOOGLE_API_KEY),
+  new URL('../eval/cache/query-embeddings.json', import.meta.url).pathname,
+);
 // SEARCH_STRATEGY=hybrid npx tsx ... reviews another strategy.
 const search = createSearch(config.SEARCH_STRATEGY, {
   embedder,
   store,
   sparseWeight: config.HYBRID_SPARSE_WEIGHT,
+  reranker: createReranker(config.RERANKER),
 });
 
 // All stored chunks of the videos used, to look the quotes up in.

@@ -75,8 +75,9 @@ export function compareRuns(before: RunRecord, after: RunRecord): Comparison {
 const points = (value: number) => Math.round(value * 100);
 const signed = (n: number, digits = 0) => (n > 0 ? `+${n.toFixed(digits)}` : n.toFixed(digits));
 const describe = (run: RunRecord) => {
-  const { search, sparseWeight } = run.settings;
-  const how = search && sparseWeight !== undefined ? `${search} ${sparseWeight}` : search;
+  const { search, sparseWeight, reranker } = run.settings;
+  const searchText = search && sparseWeight !== undefined ? `${search} ${sparseWeight}` : search;
+  const how = reranker ? `${searchText} + ${reranker}` : searchText;
   const parts = [how, run.createdAt.slice(0, 10), run.commit && `commit ${run.commit}`];
   return `"${run.label}" (${parts.filter(Boolean).join(', ')})`;
 };
@@ -86,14 +87,22 @@ const rank = (value: number | null) => (value === null ? 'none' : String(value))
 const showSetting = (value: string | number | null | undefined) =>
   value === null ? 'none' : value === undefined ? 'unknown' : String(value);
 
-// Only hybrid runs have a sparse weight, so "missing" there means "does not apply", not "unknown".
+// These settings exist only when the feature was used, so "missing" means "not used", not "unknown".
+const OPTIONAL_SETTINGS = new Set<keyof RunSettings>([
+  'sparseWeight',
+  'reranker',
+  'rerankCandidates',
+]);
+
 function settingChanges(before: RunSettings, after: RunSettings): string[] {
   const keys = new Set([...Object.keys(before), ...Object.keys(after)]) as Set<keyof RunSettings>;
   return [...keys]
     .filter((key) => before[key] !== after[key])
     .map((key) => {
       const show = (settings: RunSettings) =>
-        key === 'sparseWeight' && settings[key] === undefined ? 'none' : showSetting(settings[key]);
+        OPTIONAL_SETTINGS.has(key) && settings[key] === undefined
+          ? 'none'
+          : showSetting(settings[key]);
       return `${key} ${show(before)} -> ${show(after)}`;
     });
 }

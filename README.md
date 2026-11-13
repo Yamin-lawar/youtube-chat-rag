@@ -68,6 +68,7 @@ npm run eval --workspace server                                  # score retriev
 npm run eval --workspace server -- --label hybrid                # name the run
 npm run eval --workspace server -- --strategy hybrid             # search strategy: dense (default) or hybrid
 npm run eval --workspace server -- --strategy hybrid --sparse-weight 0.3   # hybrid, exact-word list counts 0.3 (default 1)
+npm run eval --workspace server -- --reranker minilm              # re-order results with a local model: minilm or bge-m3
 npm run eval --workspace server -- --only q42-q86                # score only some questions (ids and ranges)
 npm run eval --workspace server -- --save-baseline               # keep this run as the one to beat
 npm run eval --workspace server -- --against eval/runs/<file>.json   # compare with another saved run

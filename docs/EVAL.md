@@ -103,7 +103,7 @@ Embedding the questions takes a minute or so because of the free-tier rate limit
 
 ## Comparing with earlier runs
 
-Every run is saved as a JSON file in `server/eval/runs/` (not committed) and compared with [baseline.json](../server/eval/baseline.json), the run to beat (committed). The comparison is printed after the normal output.
+The embedding of each question is kept in `server/eval/cache/` (not committed), so after the first run the eval makes no embedding calls and does not use the Gemini quota (1000 requests a day on the free tier). Every run is saved as a JSON file in `server/eval/runs/` (not committed) and compared with [baseline.json](../server/eval/baseline.json), the run to beat (committed). The comparison is printed after the normal output.
 
 ```bash
 # keep the current numbers as the baseline (do this on a setup you trust)
@@ -117,6 +117,9 @@ npm run eval --workspace server -- --strategy hybrid --label hybrid-v1
 
 # hybrid with the exact-word list counting less than the meaning list (default 1, 0 = same as dense)
 npm run eval --workspace server -- --strategy hybrid --sparse-weight 0.3 --label hybrid-w0.3
+
+# re-order the search results with a local reranker model (downloaded on the first run)
+npm run eval --workspace server -- --reranker minilm --label dense-minilm
 
 # score only some questions: ids and ranges in file order (cannot be combined with --save-baseline)
 npm run eval --workspace server -- --only q42-q86 --label new-questions

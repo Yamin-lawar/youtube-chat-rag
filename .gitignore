@@ -15,6 +15,10 @@ qdrant_storage/
 
 # Eval run history (eval/baseline.json is committed, the runs are not)
 server/eval/runs/
+server/eval/cache/
+
+# Downloaded reranker models (hundreds of MB, fetched on first use)
+server/.model-cache/
 
 # Logs
 *.log

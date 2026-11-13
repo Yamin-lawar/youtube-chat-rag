@@ -110,4 +110,16 @@ describe('formatComparison', () => {
     const text = formatComparison(compareRuns(run('a', { q1: 1 }), run('b', { q1: 1 })));
     expect(text).toContain('Settings changed: none');
   });
+
+  it('names the reranker in the header and shows it as "none" on the run that had none', () => {
+    const before = run('baseline', { q1: 1 });
+    const after = {
+      ...run('reranked', { q1: 1 }),
+      settings: { ...settings, reranker: 'minilm', rerankCandidates: 20 },
+    };
+    const text = formatComparison(compareRuns(before, after));
+    expect(text).toContain('(dense + minilm, 2026-01-01');
+    expect(text).toContain('reranker none -> minilm');
+    expect(text).toContain('rerankCandidates none -> 20');
+  });
 });

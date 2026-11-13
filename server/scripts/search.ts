@@ -5,6 +5,7 @@ import { RecursiveChunker } from '../src/rag/chunking/recursiveChunker.js';
 import { config } from '../src/config.js';
 import { EMBEDDING_DIMENSIONS, GeminiEmbedder } from '../src/rag/embeddings/embedder.js';
 import { DEFAULT_TOP_K, retrieveChunks } from '../src/rag/retrieval/retriever.js';
+import { createReranker } from '../src/rag/rerank/models.js';
 import { createSearch } from '../src/rag/search/createSearch.js';
 import { QdrantChunkStore } from '../src/rag/vectorstore/qdrantChunkStore.js';
 
@@ -27,6 +28,7 @@ const search = createSearch(config.SEARCH_STRATEGY, {
   embedder,
   store,
   sparseWeight: config.HYBRID_SPARSE_WEIGHT,
+  reranker: createReranker(config.RERANKER),
 });
 
 // Look at a few more candidates than retrieval keeps, so you can see what falls outside it.

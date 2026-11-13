@@ -7,6 +7,7 @@ import { EMBEDDING_DIMENSIONS, GeminiEmbedder } from '../src/rag/embeddings/embe
 import { createGenerator } from '../src/rag/generation/providers.js';
 import { buildUserPrompt, formatTimestamp } from '../src/rag/generation/prompt.js';
 import { retrieveChunks } from '../src/rag/retrieval/retriever.js';
+import { createReranker } from '../src/rag/rerank/models.js';
 import { createSearch } from '../src/rag/search/createSearch.js';
 import { QdrantChunkStore } from '../src/rag/vectorstore/qdrantChunkStore.js';
 
@@ -29,6 +30,7 @@ const search = createSearch(config.SEARCH_STRATEGY, {
   embedder,
   store,
   sparseWeight: config.HYBRID_SPARSE_WEIGHT,
+  reranker: createReranker(config.RERANKER),
 });
 const chunks = await retrieveChunks(question, { search }, { youtubeIds });
 

@@ -5,6 +5,7 @@
 //   npm run eval --workspace server -- --save-baseline     keep this run as the one to beat
 //   npm run eval --workspace server -- --strategy hybrid   dense (default) or hybrid
 //   npm run eval --workspace server -- --strategy hybrid --sparse-weight 0.5   hybrid, keyword list counts half
+//   npm run eval --workspace server -- --reranker minilm    re-order the results with a local model (minilm, bge-m3)
 //   npm run eval --workspace server -- --only q42-q86      score only some questions (ids and ranges)
 //   (or) npx tsx --env-file=../.env scripts/eval.ts
 //
@@ -28,9 +29,13 @@ import { loadQuestions, selectQuestions } from '../src/eval/questions.js';
 import { buildRunRecord } from '../src/eval/runRecord.js';
 import { currentCommit, loadRun, saveRun, writeRun } from '../src/eval/runStore.js';
 import type { EvalQuestion } from '../src/eval/types.js';
+import { CachingEmbedder } from '../src/rag/embeddings/cachingEmbedder.js';
 import { EMBEDDING_DIMENSIONS, GeminiEmbedder } from '../src/rag/embeddings/embedder.js';
 import { DEFAULT_TOP_K, keepNearBest } from '../src/rag/retrieval/retriever.js';
+import { createReranker } from '../src/rag/rerank/models.js';
+import { RERANKER_NAMES, type RerankerName } from '../src/rag/rerank/names.js';
 import { createSearch } from '../src/rag/search/createSearch.js';
+import { RERANK_CANDIDATES } from '../src/rag/search/rerankedSearch.js';
 import { SEARCH_STRATEGIES, type SearchStrategyName } from '../src/rag/search/types.js';
 import { QdrantChunkStore, type ChunkPayload } from '../src/rag/vectorstore/qdrantChunkStore.js';
 
@@ -42,12 +47,18 @@ const { values: args } = parseArgs({
     strategy: { type: 'string' },
     'sparse-weight': { type: 'string' },
     only: { type: 'string' },
+    reranker: { type: 'string' },
   },
 });
 
 const strategyName = (args.strategy ?? config.SEARCH_STRATEGY) as SearchStrategyName;
 if (!SEARCH_STRATEGIES.includes(strategyName)) {
   console.error(`Unknown strategy "${strategyName}". Use one of: ${SEARCH_STRATEGIES.join(', ')}`);
+  process.exit(1);
+}
+const rerankerName = (args.reranker ?? config.RERANKER) as RerankerName;
+if (!RERANKER_NAMES.includes(rerankerName)) {
+  console.error(`Unknown reranker "${rerankerName}". Use one of: ${RERANKER_NAMES.join(', ')}`);
   process.exit(1);
 }
 const sparseWeight = args['sparse-weight']
@@ -80,8 +91,17 @@ const store = new QdrantChunkStore(
   `chunks_${new RecursiveChunker().name}`,
   EMBEDDING_DIMENSIONS,
 );
-const embedder = new GeminiEmbedder(config.GOOGLE_API_KEY);
-const search = createSearch(strategyName, { embedder, store, sparseWeight });
+// The eval asks the same questions every run, so their embeddings are kept in a file (git-ignored).
+const embedder = new CachingEmbedder(
+  new GeminiEmbedder(config.GOOGLE_API_KEY),
+  `${evalDir}cache/query-embeddings.json`,
+);
+const search = createSearch(strategyName, {
+  embedder,
+  store,
+  sparseWeight,
+  reranker: createReranker(rerankerName),
+});
 
 const stored: ChunkPayload[] = [];
 for (const youtubeId of new Set(questions.flatMap((q) => q.youtubeIds))) {
@@ -148,7 +168,7 @@ console.log(
   `\nRetrieval eval: ${answerable.length} answerable questions, ${unanswerableTopScores.length} unanswerable`,
 );
 console.log(
-  `Settings: search ${search.name}${search.name === 'hybrid' ? ` (sparse weight ${sparseWeight})` : ''}, topK ${DEFAULT_TOP_K}, margin ${search.maxScoreDrop}, chunking recursive 1000/200\n`,
+  `Settings: search ${search.name}${search.name === 'hybrid' ? ` (sparse weight ${sparseWeight})` : ''}${rerankerName !== 'none' ? `, reranker ${rerankerName} on ${RERANK_CANDIDATES} candidates` : ''}, topK ${DEFAULT_TOP_K}, margin ${search.maxScoreDrop}, chunking recursive 1000/200\n`,
 );
 
 const atEachK = (pick: (r: Result, k: number) => number) =>
@@ -247,6 +267,9 @@ const record = buildRunRecord(
       maxScoreDrop: Number.isFinite(search.maxScoreDrop) ? search.maxScoreDrop : null,
       chunking: new RecursiveChunker().name,
       ...(search.name === 'hybrid' ? { sparseWeight } : {}),
+      ...(rerankerName !== 'none'
+        ? { reranker: rerankerName, rerankCandidates: RERANK_CANDIDATES }
+        : {}),
     },
   },
   answerable.map((r) => ({

@@ -22,6 +22,9 @@ export interface RunSettings {
   chunking: string;
   /** Hybrid only: the weight of the exact-word list against the meaning list (1). */
   sparseWeight?: number;
+  /** Only when a reranker was used: its name and how many candidates it was given. */
+  reranker?: string;
+  rerankCandidates?: number;
 }
 
 export interface QuestionResult {

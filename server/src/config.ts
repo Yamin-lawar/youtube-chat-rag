@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { RERANKER_NAMES } from './rag/rerank/names.js';
 import { SEARCH_STRATEGIES } from './rag/search/types.js';
 
 // Validate environment variables once at startup so a missing or malformed
@@ -16,6 +17,8 @@ const envSchema = z.object({
   SEARCH_STRATEGY: z.enum(SEARCH_STRATEGIES).default('dense'),
   // Hybrid only: how much the exact-word list counts compared with the meaning list (1).
   HYBRID_SPARSE_WEIGHT: z.coerce.number().min(0).default(1),
+  // Re-order the search results with a local model: none (default), minilm or bge-m3.
+  RERANKER: z.enum(RERANKER_NAMES).default('none'),
 });
 
 const parsed = envSchema.safeParse(process.env);

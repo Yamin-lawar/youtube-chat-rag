@@ -6,6 +6,7 @@ import { EMBEDDING_DIMENSIONS, GeminiEmbedder, type Embedder } from './embedding
 import { createGenerator, createRewriter } from './generation/providers.js';
 import type { Generator } from './generation/types.js';
 import type { QuestionRewriter } from './rewriting/types.js';
+import { createReranker } from './rerank/models.js';
 import { createSearch } from './search/createSearch.js';
 import type { SearchStrategy } from './search/types.js';
 import type { TranscriptProvider } from './transcript/types.js';
@@ -49,6 +50,7 @@ export function getRagServices(): RagServices {
         embedder,
         store,
         sparseWeight: config.HYBRID_SPARSE_WEIGHT,
+        reranker: createReranker(config.RERANKER),
       }),
       generator: createGenerator(keys),
       rewriter: createRewriter(keys),
