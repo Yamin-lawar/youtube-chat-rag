@@ -12,7 +12,7 @@ Reading a few answers and deciding they "look fine" cannot show whether a change
 
 ```
  server/eval/questions.json
-   41 questions, each with the answer written as a quote from the transcript
+   86 questions, each with the answer written as a quote from the transcript
               |
               v
  1. Find the quote in the stored chunks  ->  a time range in the video (the "answer key")
@@ -118,6 +118,9 @@ npm run eval --workspace server -- --strategy hybrid --label hybrid-v1
 # hybrid with the exact-word list counting less than the meaning list (default 1, 0 = same as dense)
 npm run eval --workspace server -- --strategy hybrid --sparse-weight 0.3 --label hybrid-w0.3
 
+# score only some questions: ids and ranges in file order (cannot be combined with --save-baseline)
+npm run eval --workspace server -- --only q42-q86 --label new-questions
+
 # compare against another saved run instead of the baseline
 npm run eval --workspace server -- --against eval/runs/<file>.json
 
@@ -144,7 +147,7 @@ Things to keep in mind:
 
 - **Change one thing per run.** Each file records the git commit, so you can see which code made it.
 - **A run is repeatable.** Two runs with no change give identical numbers, so any difference comes from what you changed.
-- **Check the size of the change.** With 37 answerable questions, one question moving is about 2.7 points of hit rate. Trust changes that point the same way across several metrics.
+- **Check the size of the change.** With 78 answerable questions, one question moving is about 1.3 points of hit rate. Trust changes that point the same way across several metrics.
 - **Questions must match.** If you add or remove questions, the averages are no longer comparable and the comparison prints a warning. Save a new baseline after changing the question set.
 
 ## Checking the labels
@@ -186,27 +189,37 @@ The file is validated on load ([questions.ts](../server/src/eval/questions.ts)):
 
 ## Baseline
 
-This is the saved baseline (`server/eval/baseline.json`). Dense search, recursive chunking (1000 characters, 200 overlap), top-k 12, margin 0.12. 37 answerable and 4 unanswerable questions on five videos (the three short ones plus two long ones, 72 and 50 chunks). The pool for a question is 46.5 chunks on average.
+This is the saved baseline (`server/eval/baseline.json`). Dense search, recursive chunking (1000 characters, 200 overlap), top-k 12, margin 0.12. 78 answerable and 8 unanswerable questions on 12 videos (three short investing and AI-bubble videos, two long ones of 72 and 50 chunks, and seven more: a 75-chunk coding tutorial, two videos about AI harnesses that cover the same topic, three beginner-investing videos and one Hindi video). The pool for a question is 58.2 chunks on average.
 
 |                            | top 1 | top 3 | top 5 | top 10 |
 | -------------------------- | ----- | ----- | ----- | ------ |
-| Hit rate                   | 70%   | 92%   | 100%  | 100%   |
-| Recall@k                   | 60%   | 81%   | 91%   | 97%    |
-| Precision@k                | 70%   | 50%   | 36%   | 21%    |
-| Best possible precision@k  | 100%  | 72%   | 48%   | 24%    |
-| nDCG@k                     | 70%   | 72%   | 75%   | 80%    |
-| Random guessing (hit rate) | 9%    | 24%   | 38%   | 62%    |
+| Hit rate                   | 69%   | 91%   | 97%   | 100%   |
+| Recall@k                   | 64%   | 84%   | 91%   | 98%    |
+| Precision@k                | 69%   | 48%   | 34%   | 20%    |
+| Best possible precision@k  | 100%  | 68%   | 44%   | 22%    |
+| nDCG@k                     | 69%   | 71%   | 75%   | 80%    |
+| Random guessing (hit rate) | 6%    | 17%   | 27%   | 46%    |
 
-MRR 0.818. By type: facts 0.969, paraphrases 0.857, lists 0.850, multi-video 0.617, overview 0.354. The chunks the app really sends to the model (9.8 on average) contain 97% of the evidence.
+MRR 0.809. By type (questions in brackets): facts 0.931 (37), lists 0.821 (7), paraphrases 0.772 (16), multi-video 0.643 (9), overview 0.528 (9). The chunks the app really sends to the model (10.5 on average) contain 98% of the evidence.
 
-The earlier set of 23 questions on the three short videos scored MRR 0.841, hit rate 74% at top 1, and random guessing 81% at top 10.
+Earlier baselines, kept for the record:
+
+| Set                            | Questions (answerable) | MRR   | Hit rate at top 5 | Random guessing at top 10 |
+| ------------------------------ | ---------------------- | ----- | ----------------- | ------------------------- |
+| v1: three short videos         | 25 (23)                | 0.841 | 100%              | 81%                       |
+| v2: plus two long videos       | 41 (37)                | 0.818 | 100%              | 62%                       |
+| **v3: plus seven more videos** | **86 (78)**            | 0.809 | 97%               | 46%                       |
+
+The v2 baseline file is kept as [baseline-v2-41-questions.json](../server/eval/results/baseline-v2-41-questions.json). Each step made the set harder (more chunks to choose from, so less luck), and hit rate at top 5 is no longer stuck at 100%.
 
 ## Limitations
 
-- **The set is still small and fairly easy.** 37 answerable questions. Differences under about 5 points are noise. Hit rate is still 100% at top 5, so the numbers that can separate strategies are top 1, top 3, MRR, nDCG and recall at 3 and 5. The long videos added more chunks but most of their questions still found the answer at rank 1 or 2.
+- **The set is bigger but still small.** 78 answerable questions, so one question is 1.3 points of hit rate and differences under about 3 to 5 points are noise. The groups by type are smaller (7 lists, 9 overview, 9 multi-video), so the per-type numbers move a lot with a single question. Hit rate is 100% only at top 10 now, so top 1, top 3, MRR, nDCG and recall are the numbers to compare.
+- **The questions were written by reading the transcripts.** That favours wording the transcripts contain. The paraphrase questions try to avoid it, but a set written by someone who has not read the videos would be a fairer test.
+- **The Hindi video is a cross-language test.** Two questions ask in English about a Hindi transcript. Dense search can match across languages. The keyword (BM25) tokenizer cannot match English words to Hindi text, and it also removes Hindi vowel marks (it strips accents with the same rule), so for that video a keyword search is both useless and damaged. Known limitation, see EXPERIMENTS.md.
 - **Overview labels are a judgement call.** "What is the main argument?" has no single correct passage, so those scores say less than the fact scores.
 - **One chunking setup.** The scripts search the `chunks_recursive` collection. Comparing chunking strategies needs a collection per strategy and a way to choose it. The quote labels themselves do not change.
 - **Chunk size is not controlled.** Metrics count chunks, and a top 5 of small chunks gives the model less text than a top 5 of large ones. Compare chunking strategies together with the amount of text sent.
-- **"No answer" detection by score does not work.** The highest top score among unanswerable questions (0.670) is above the lowest among answerable ones (0.629). The two highest unanswerable scores come from questions that name the speaker ("Howard Marks", "Andrew Ng"), which matches that video's opening even though the topic (cryptocurrency, quantum computing) is never mentioned.
+- **"No answer" detection by score does not work.** The highest top score among unanswerable questions (0.710) is above the lowest among answerable ones (0.624). Earlier, the highest unanswerable scores came from questions that name the speaker ("Howard Marks", "Andrew Ng"), which matches that video's opening even though the topic (cryptocurrency, quantum computing) is never mentioned.
 
 Results of the experiments run with this eval are in [EXPERIMENTS.md](EXPERIMENTS.md).

@@ -543,6 +543,570 @@
           "quote": "handful of businesses want to hype up AI"
         }
       ]
+    },
+    {
+      "id": "q42",
+      "type": "fact",
+      "question": "What did Stripe build for its engineers?",
+      "youtubeIds": ["mv9kfF_kJd0", "sFHXYv7ANkc"],
+      "evidence": [
+        {
+          "youtubeId": "mv9kfF_kJd0",
+          "quote": "Stripe recently built minions for its engineers"
+        }
+      ]
+    },
+    {
+      "id": "q43",
+      "type": "fact",
+      "question": "Which library does the harness engineering demo use to get the basic agent loop?",
+      "youtubeIds": ["mv9kfF_kJd0", "sFHXYv7ANkc"],
+      "evidence": [
+        {
+          "youtubeId": "mv9kfF_kJd0",
+          "quote": "a library called deep agents by lang graph"
+        }
+      ]
+    },
+    {
+      "id": "q44",
+      "type": "fact",
+      "question": "At how many tokens does the summarization step kick in?",
+      "youtubeIds": ["mv9kfF_kJd0", "sFHXYv7ANkc"],
+      "evidence": [
+        {
+          "youtubeId": "mv9kfF_kJd0",
+          "quote": "summarization is triggered at 12,000 tokens"
+        }
+      ]
+    },
+    {
+      "id": "q45",
+      "type": "fact",
+      "question": "What maximum context length does Opus 4.6 have?",
+      "youtubeIds": ["sFHXYv7ANkc", "mv9kfF_kJd0"],
+      "evidence": [
+        {
+          "youtubeId": "sFHXYv7ANkc",
+          "quote": "Opus 4.6 has a maximum context length of 1 million"
+        }
+      ]
+    },
+    {
+      "id": "q46",
+      "type": "fact",
+      "question": "Which tool does the video show for automatically testing a website?",
+      "youtubeIds": ["sFHXYv7ANkc", "mv9kfF_kJd0"],
+      "evidence": [
+        {
+          "youtubeId": "sFHXYv7ANkc",
+          "quote": "It's super simple to get started with Test Sprite"
+        }
+      ]
+    },
+    {
+      "id": "q47",
+      "type": "paraphrase",
+      "question": "How do you make the assistant pause for a go-ahead from a person before a risky action?",
+      "youtubeIds": ["mv9kfF_kJd0", "sFHXYv7ANkc"],
+      "evidence": [
+        {
+          "youtubeId": "mv9kfF_kJd0",
+          "quote": "you should ask a human in order to give you approval"
+        }
+      ]
+    },
+    {
+      "id": "q48",
+      "type": "paraphrase",
+      "question": "Why might the same AI model feel brilliant in one coding tool and useless in another?",
+      "youtubeIds": ["sFHXYv7ANkc", "mv9kfF_kJd0"],
+      "evidence": [
+        {
+          "youtubeId": "sFHXYv7ANkc",
+          "quote": "how can this model actually be good as well as bad at once"
+        }
+      ]
+    },
+    {
+      "id": "q49",
+      "type": "overview",
+      "question": "What is the main point of the video about AI agent harnesses?",
+      "youtubeIds": ["sFHXYv7ANkc", "mv9kfF_kJd0"],
+      "evidence": [
+        {
+          "youtubeId": "sFHXYv7ANkc",
+          "quote": "let's talk about AI agent harness in this video"
+        },
+        {
+          "youtubeId": "sFHXYv7ANkc",
+          "quote": "the core reason behind that is harness"
+        }
+      ]
+    },
+    {
+      "id": "q50",
+      "type": "overview",
+      "question": "What is harness engineering and why are companies hiring for it?",
+      "youtubeIds": ["mv9kfF_kJd0", "sFHXYv7ANkc"],
+      "evidence": [
+        {
+          "youtubeId": "mv9kfF_kJd0",
+          "quote": "It's called harness engineering, which is basically the skill of building a harness"
+        }
+      ]
+    },
+    {
+      "id": "q51",
+      "type": "list",
+      "question": "What are the four components of the harness that is built step by step?",
+      "youtubeIds": ["mv9kfF_kJd0", "sFHXYv7ANkc"],
+      "evidence": [
+        {
+          "youtubeId": "mv9kfF_kJd0",
+          "quote": "the first component is context"
+        },
+        {
+          "youtubeId": "mv9kfF_kJd0",
+          "quote": "second is actions"
+        },
+        {
+          "youtubeId": "mv9kfF_kJd0",
+          "quote": "the third one is boundaries"
+        },
+        {
+          "youtubeId": "mv9kfF_kJd0",
+          "quote": "the fourth component is persistence"
+        }
+      ]
+    },
+    {
+      "id": "q52",
+      "type": "multi-video",
+      "question": "What do the two harness videos say about managing the context window?",
+      "youtubeIds": ["sFHXYv7ANkc", "mv9kfF_kJd0"],
+      "evidence": [
+        {
+          "youtubeId": "sFHXYv7ANkc",
+          "quote": "context management is another task"
+        },
+        {
+          "youtubeId": "mv9kfF_kJd0",
+          "quote": "not letting it overflow"
+        }
+      ]
+    },
+    {
+      "id": "q53",
+      "type": "multi-video",
+      "question": "Which products does each harness video give as examples of a harness?",
+      "youtubeIds": ["sFHXYv7ANkc", "mv9kfF_kJd0"],
+      "evidence": [
+        {
+          "youtubeId": "sFHXYv7ANkc",
+          "quote": "Claude Code is a harness"
+        },
+        {
+          "youtubeId": "mv9kfF_kJd0",
+          "quote": "Stripe recently built minions for its engineers"
+        }
+      ]
+    },
+    {
+      "id": "q54",
+      "type": "fact",
+      "question": "How much long-term debt does Apple have in the stock-picking example?",
+      "youtubeIds": ["ea6qNsLbxNA", "Z38AlR1vxFw", "8Ij7A1VCB7I"],
+      "evidence": [
+        {
+          "youtubeId": "ea6qNsLbxNA",
+          "quote": "109 billion dollars in long-term debt"
+        }
+      ]
+    },
+    {
+      "id": "q55",
+      "type": "fact",
+      "question": "What does a price to earnings ratio of 20 mean?",
+      "youtubeIds": ["ea6qNsLbxNA", "Z38AlR1vxFw", "8Ij7A1VCB7I"],
+      "evidence": [
+        {
+          "youtubeId": "ea6qNsLbxNA",
+          "quote": "investors are paying twenty dollars for every one dollar of that company's earnings"
+        }
+      ]
+    },
+    {
+      "id": "q56",
+      "type": "fact",
+      "question": "Which app does the beginner investing walkthrough use?",
+      "youtubeIds": ["8Ij7A1VCB7I", "Z38AlR1vxFw", "ea6qNsLbxNA"],
+      "evidence": [
+        {
+          "youtubeId": "8Ij7A1VCB7I",
+          "quote": "Let's use the Trading 212 app"
+        }
+      ]
+    },
+    {
+      "id": "q57",
+      "type": "fact",
+      "question": "What is the yearly limit for a US Roth IRA mentioned in the beginner video?",
+      "youtubeIds": ["8Ij7A1VCB7I", "Z38AlR1vxFw", "ea6qNsLbxNA"],
+      "evidence": [
+        {
+          "youtubeId": "8Ij7A1VCB7I",
+          "quote": "a much lower limit of $6,500 per year"
+        }
+      ]
+    },
+    {
+      "id": "q58",
+      "type": "fact",
+      "question": "How far below the 50-year mean growth must the market fall before the saved cash is invested?",
+      "youtubeIds": ["Z38AlR1vxFw", "8Ij7A1VCB7I"],
+      "evidence": [
+        {
+          "youtubeId": "Z38AlR1vxFw",
+          "quote": "tanks below 10% of that 50-year mean growth of the market"
+        }
+      ]
+    },
+    {
+      "id": "q59",
+      "type": "paraphrase",
+      "question": "Why is it better to invest a bit every month than to wait for the perfect moment?",
+      "youtubeIds": ["Z38AlR1vxFw", "8Ij7A1VCB7I", "ea6qNsLbxNA"],
+      "evidence": [
+        {
+          "youtubeId": "Z38AlR1vxFw",
+          "quote": "buying your stocks like groceries and not perfume"
+        }
+      ]
+    },
+    {
+      "id": "q60",
+      "type": "paraphrase",
+      "question": "How can someone invest a tiny amount every day without thinking about it?",
+      "youtubeIds": ["8Ij7A1VCB7I", "Z38AlR1vxFw"],
+      "evidence": [
+        {
+          "youtubeId": "8Ij7A1VCB7I",
+          "quote": "Automating your investments like this is a great idea as it means you can just set it and forget it"
+        }
+      ]
+    },
+    {
+      "id": "q61",
+      "type": "overview",
+      "question": "What strategy does the dollar cost averaging video teach?",
+      "youtubeIds": ["Z38AlR1vxFw", "8Ij7A1VCB7I", "ea6qNsLbxNA"],
+      "evidence": [
+        {
+          "youtubeId": "Z38AlR1vxFw",
+          "quote": "one of the most undertalked about strategies, but one of the most powerful strategies, advanced dollar cost averaging"
+        }
+      ]
+    },
+    {
+      "id": "q62",
+      "type": "overview",
+      "question": "What checklist does the stock-picking video give a beginner?",
+      "youtubeIds": ["ea6qNsLbxNA", "V44vd4sJcPs", "8Ij7A1VCB7I"],
+      "evidence": [
+        {
+          "youtubeId": "ea6qNsLbxNA",
+          "quote": "want to go through this checklist because"
+        }
+      ]
+    },
+    {
+      "id": "q63",
+      "type": "multi-video",
+      "question": "What do the investing videos say about index funds?",
+      "youtubeIds": ["ea6qNsLbxNA", "Z38AlR1vxFw", "8Ij7A1VCB7I", "V44vd4sJcPs"],
+      "evidence": [
+        {
+          "youtubeId": "ea6qNsLbxNA",
+          "quote": "strategies that Warren Buffett recommends for almost any investor"
+        },
+        {
+          "youtubeId": "8Ij7A1VCB7I",
+          "quote": "Here's the cool part about an index fund"
+        },
+        {
+          "youtubeId": "V44vd4sJcPs",
+          "quote": "index investing is a fine thing for the average amateur investor"
+        },
+        {
+          "youtubeId": "Z38AlR1vxFw",
+          "quote": "So it's a fund of 500 companies"
+        }
+      ]
+    },
+    {
+      "id": "q64",
+      "type": "multi-video",
+      "question": "Who says index funds do not remove the risk of losing money?",
+      "youtubeIds": ["V44vd4sJcPs", "Z38AlR1vxFw", "8Ij7A1VCB7I", "ea6qNsLbxNA"],
+      "evidence": [
+        {
+          "youtubeId": "V44vd4sJcPs",
+          "quote": "the index fund investor loses money every time the index goes down"
+        }
+      ]
+    },
+    {
+      "id": "q65",
+      "type": "list",
+      "question": "What reasons does the tutorial give for retrieving only the relevant parts instead of the whole transcript?",
+      "youtubeIds": ["JljlsOJmlCA"],
+      "evidence": [
+        {
+          "youtubeId": "JljlsOJmlCA",
+          "quote": "context is limited. You cannot just pass infinite amount of data to LLMs"
+        },
+        {
+          "youtubeId": "JljlsOJmlCA",
+          "quote": "the more data you pass to the LLM, the performance decreases"
+        },
+        {
+          "youtubeId": "JljlsOJmlCA",
+          "quote": "it would be extraordinary expensive because when you use LLM models, you pay per input and output"
+        }
+      ]
+    },
+    {
+      "id": "q66",
+      "type": "fact",
+      "question": "How many dimensions does the text embedding large model have in the tutorial?",
+      "youtubeIds": ["JljlsOJmlCA", "mv9kfF_kJd0", "sFHXYv7ANkc"],
+      "evidence": [
+        {
+          "youtubeId": "JljlsOJmlCA",
+          "quote": "text embedding large is 3072"
+        }
+      ]
+    },
+    {
+      "id": "q67",
+      "type": "fact",
+      "question": "How many recent messages does the tutorial pass as chat history?",
+      "youtubeIds": ["JljlsOJmlCA"],
+      "evidence": [
+        {
+          "youtubeId": "JljlsOJmlCA",
+          "quote": "last 14 messages last seven from user last seven from the AI"
+        }
+      ]
+    },
+    {
+      "id": "q68",
+      "type": "fact",
+      "question": "What is the default number of matches the match function returns?",
+      "youtubeIds": ["JljlsOJmlCA"],
+      "evidence": [
+        {
+          "youtubeId": "JljlsOJmlCA",
+          "quote": "match count integer default is five"
+        }
+      ]
+    },
+    {
+      "id": "q69",
+      "type": "paraphrase",
+      "question": "What do you call it when the answer appears piece by piece instead of all at once?",
+      "youtubeIds": ["JljlsOJmlCA"],
+      "evidence": [
+        {
+          "youtubeId": "JljlsOJmlCA",
+          "quote": "That's streaming"
+        }
+      ]
+    },
+    {
+      "id": "q70",
+      "type": "paraphrase",
+      "question": "How can the search understand that director, boss and CEO mean the same idea?",
+      "youtubeIds": ["JljlsOJmlCA"],
+      "evidence": [
+        {
+          "youtubeId": "JljlsOJmlCA",
+          "quote": "it's not only by keyword so we can say director we can say founder we can say CEO"
+        }
+      ]
+    },
+    {
+      "id": "q71",
+      "type": "paraphrase",
+      "question": "What everyday comparison does the tutorial use for the retrieval step?",
+      "youtubeIds": ["JljlsOJmlCA"],
+      "evidence": [
+        {
+          "youtubeId": "JljlsOJmlCA",
+          "quote": "librarian gives us gives us a couple of books about the topic"
+        }
+      ]
+    },
+    {
+      "id": "q72",
+      "type": "fact",
+      "question": "Why does the tutorial turn off row level security, and what should you do in production?",
+      "youtubeIds": ["JljlsOJmlCA"],
+      "evidence": [
+        {
+          "youtubeId": "JljlsOJmlCA",
+          "quote": "disable RLS. Don't do this in production"
+        }
+      ]
+    },
+    {
+      "id": "q73",
+      "type": "overview",
+      "question": "What does the tutorial build?",
+      "youtubeIds": ["JljlsOJmlCA"],
+      "evidence": [
+        {
+          "youtubeId": "JljlsOJmlCA",
+          "quote": "in this video we will build a rag application for chatting with YouTube videos"
+        }
+      ]
+    },
+    {
+      "id": "q74",
+      "type": "fact",
+      "question": "How much did Meta invest in Scale AI in June 2025?",
+      "youtubeIds": ["0NMxDzPHX3Q", "PMwIW8ZT69o", "DRDI0KApHZw"],
+      "evidence": [
+        {
+          "youtubeId": "0NMxDzPHX3Q",
+          "quote": "14.3 बिलियन इन्वेस्ट किए थे"
+        }
+      ]
+    },
+    {
+      "id": "q75",
+      "type": "fact",
+      "question": "Why did Meta's open-source plan fail?",
+      "youtubeIds": ["0NMxDzPHX3Q", "PMwIW8ZT69o", "DRDI0KApHZw"],
+      "evidence": [
+        {
+          "youtubeId": "0NMxDzPHX3Q",
+          "quote": "नंबर वन फ्री डजंट मीन लॉयल"
+        }
+      ]
+    },
+    {
+      "id": "q76",
+      "type": "fact",
+      "question": "What tennis comparison does Howard Marks use for investing styles?",
+      "youtubeIds": ["V44vd4sJcPs"],
+      "evidence": [
+        {
+          "youtubeId": "V44vd4sJcPs",
+          "quote": "the amateur tennis player like him and me we win not by hitting winners but by avoiding hitting losers"
+        }
+      ]
+    },
+    {
+      "id": "q77",
+      "type": "paraphrase",
+      "question": "Which famous warning says that being sure of something false is more dangerous than not knowing?",
+      "youtubeIds": ["V44vd4sJcPs", "o-wv_szZ0V0"],
+      "evidence": [
+        {
+          "youtubeId": "V44vd4sJcPs",
+          "quote": "it's not what you don't know that gets you into trouble it's what you know for certain that just ain't true"
+        }
+      ]
+    },
+    {
+      "id": "q78",
+      "type": "fact",
+      "question": "What yearly return did Oaktree make buying distressed debt?",
+      "youtubeIds": ["V44vd4sJcPs"],
+      "evidence": [
+        {
+          "youtubeId": "V44vd4sJcPs",
+          "quote": "we've made about 23% a year for 28 years"
+        }
+      ]
+    },
+    {
+      "id": "q79",
+      "type": "fact",
+      "question": "How many pages are in the free PDF of Howard Marks's memos?",
+      "youtubeIds": ["V44vd4sJcPs", "o-wv_szZ0V0"],
+      "evidence": [
+        {
+          "youtubeId": "V44vd4sJcPs",
+          "quote": "525 pages of Howard Mark's legendary investment memos"
+        }
+      ]
+    },
+    {
+      "id": "q80",
+      "type": "fact",
+      "question": "What does Andrew Ng say about the way most people use AI to learn?",
+      "youtubeIds": ["o-wv_szZ0V0", "V44vd4sJcPs"],
+      "evidence": [
+        {
+          "youtubeId": "o-wv_szZ0V0",
+          "quote": "absolutely terrible for learning"
+        }
+      ]
+    },
+    {
+      "id": "q81",
+      "type": "paraphrase",
+      "question": "How does Andrew Ng compare keeping AI under control to something people already trust with their lives?",
+      "youtubeIds": ["o-wv_szZ0V0"],
+      "evidence": [
+        {
+          "youtubeId": "o-wv_szZ0V0",
+          "quote": "we can't perfectly control any airplane and we will never perfectly control AI either"
+        }
+      ]
+    },
+    {
+      "id": "q82",
+      "type": "fact",
+      "question": "Why does Andrew Ng say AGI could already have been reached?",
+      "youtubeIds": ["o-wv_szZ0V0", "V44vd4sJcPs"],
+      "evidence": [
+        {
+          "youtubeId": "o-wv_szZ0V0",
+          "quote": "depending on how far you lower the bar, then you could totally have reached AGI"
+        }
+      ]
+    },
+    {
+      "id": "q83",
+      "type": "unanswerable",
+      "question": "Which Gemini model does the tutorial use for embeddings?",
+      "youtubeIds": ["JljlsOJmlCA"],
+      "evidence": []
+    },
+    {
+      "id": "q84",
+      "type": "unanswerable",
+      "question": "How much does it cost per month to run the harness on Kubernetes?",
+      "youtubeIds": ["mv9kfF_kJd0", "sFHXYv7ANkc"],
+      "evidence": []
+    },
+    {
+      "id": "q85",
+      "type": "unanswerable",
+      "question": "What do the videos say about investing in real estate?",
+      "youtubeIds": ["ea6qNsLbxNA", "Z38AlR1vxFw", "8Ij7A1VCB7I"],
+      "evidence": []
+    },
+    {
+      "id": "q86",
+      "type": "unanswerable",
+      "question": "What did Elon Musk say about nuclear fusion?",
+      "youtubeIds": ["PMwIW8ZT69o", "mE-DrQNRsRA"],
+      "evidence": []
     }
   ]
 }

@@ -35,3 +35,31 @@ export async function loadQuestions(path: string): Promise<EvalQuestion[]> {
   }
   return questions;
 }
+
+/**
+ * Picks some of the questions, for scoring only a part of the set (for example the questions
+ * added after a setting was chosen, to check that choice on questions it never saw).
+ *
+ * `spec` is a comma-separated list of ids and ranges in file order: "q03", "q42-q86",
+ * "q01,q05-q07". An unknown id or a range written backwards is an error, so a typo does not
+ * quietly score fewer questions than intended.
+ */
+export function selectQuestions(questions: EvalQuestion[], spec: string): EvalQuestion[] {
+  const positionOf = (id: string): number => {
+    const at = questions.findIndex((q) => q.id === id);
+    if (at === -1) throw new Error(`No question with id "${id}"`);
+    return at;
+  };
+
+  const chosen = new Set<number>();
+  for (const part of spec.split(',').map((item) => item.trim())) {
+    const [from, to = from] = part.split('-').map((id) => id.trim());
+    if (!from || !to)
+      throw new Error(`Cannot read "${part}". Use ids like q03 or ranges like q42-q86`);
+
+    const [start, end] = [positionOf(from), positionOf(to)];
+    if (start > end) throw new Error(`The range "${part}" runs backwards`);
+    for (let i = start; i <= end; i++) chosen.add(i);
+  }
+  return questions.filter((_, i) => chosen.has(i));
+}

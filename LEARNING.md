@@ -171,6 +171,10 @@ MRR 0.818 (was 0.841). By type: facts 0.969, paraphrases 0.857, lists 0.850, mul
 
 Both new unanswerable questions scored higher than the weakest answerable one: 0.670 (cryptocurrency, asked of the investing talk) and 0.669 (quantum computing, asked of the AI interview), against a lowest answerable top score of 0.629. Both questions name the speaker, which matches the video's opening. So the top score cannot say "no answer exists".
 
+**Eval set v3:** added seven more videos and 45 questions (86 in total, 78 answerable, 12 videos): two videos about the same topic (AI agent harnesses), three beginner-investing videos that overlap with each other and with the Howard Marks talk, a 75-chunk coding tutorial and a Hindi video. Many of the new questions ask for exact terms or numbers, nine are paraphrases, and four have no answer. All 45 quotes were checked to appear in one place only. The set is harder in the way that matters: random guessing at top 10 fell from 62% to 46%, and hit rate at top 5 fell from 100% to 97%. New dense baseline: MRR 0.809, hit rate 69% at top 1 and 91% at top 3. The weakest types are overview (0.528) and multi-video (0.643). The highest top score among unanswerable questions is 0.710 against 0.624 for the weakest answerable one, so a score still cannot say "no answer".
+
+The 45 new questions also served as a held-out test of an earlier result: the sparse weight that looked best on the first 41 questions lost on the new ones. Details in [docs/EXPERIMENTS.md](docs/EXPERIMENTS.md) (E8).
+
 ## Open questions
 
 - Does 768 dimensions lose quality compared with 3072?

@@ -5,6 +5,7 @@
 //   npm run eval --workspace server -- --save-baseline     keep this run as the one to beat
 //   npm run eval --workspace server -- --strategy hybrid   dense (default) or hybrid
 //   npm run eval --workspace server -- --strategy hybrid --sparse-weight 0.5   hybrid, keyword list counts half
+//   npm run eval --workspace server -- --only q42-q86      score only some questions (ids and ranges)
 //   (or) npx tsx --env-file=../.env scripts/eval.ts
 //
 // Every run is saved in eval/runs/ and compared with eval/baseline.json (use --against <file>
@@ -23,7 +24,7 @@ import {
   type QuestionScore,
 } from '../src/eval/metrics.js';
 import { compareRuns, formatComparison } from '../src/eval/compare.js';
-import { loadQuestions } from '../src/eval/questions.js';
+import { loadQuestions, selectQuestions } from '../src/eval/questions.js';
 import { buildRunRecord } from '../src/eval/runRecord.js';
 import { currentCommit, loadRun, saveRun, writeRun } from '../src/eval/runStore.js';
 import type { EvalQuestion } from '../src/eval/types.js';
@@ -40,6 +41,7 @@ const { values: args } = parseArgs({
     against: { type: 'string' },
     strategy: { type: 'string' },
     'sparse-weight': { type: 'string' },
+    only: { type: 'string' },
   },
 });
 
@@ -60,7 +62,18 @@ if (!Number.isFinite(sparseWeight) || sparseWeight < 0) {
 const evalDir = new URL('../eval/', import.meta.url).pathname;
 const baselinePath = `${evalDir}baseline.json`;
 
-const questions = await loadQuestions(`${evalDir}questions.json`);
+if (args.only && args['save-baseline']) {
+  console.error(
+    'A baseline must cover every question, so --save-baseline cannot be used with --only.',
+  );
+  process.exit(1);
+}
+const allQuestions = await loadQuestions(`${evalDir}questions.json`);
+const questions = args.only ? selectQuestions(allQuestions, args.only) : allQuestions;
+if (args.only)
+  console.log(
+    `Scoring ${questions.length} of ${allQuestions.length} questions (--only ${args.only})`,
+  );
 
 const store = new QdrantChunkStore(
   new QdrantClient({ url: config.QDRANT_URL }),

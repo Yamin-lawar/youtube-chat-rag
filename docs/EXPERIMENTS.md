@@ -6,24 +6,27 @@ How the numbers are produced is in [EVAL.md](EVAL.md). The per-block notes (what
 
 ## Summary
 
-| #   | Experiment                           | Question                                             | Result                                                                    | Status                  |
-| --- | ------------------------------------ | ---------------------------------------------------- | ------------------------------------------------------------------------- | ----------------------- |
-| E1  | Distance metrics                     | Does cosine, dot product or Euclidean matter?        | No, the three return almost the same chunks                               | Done, cosine kept       |
-| E2  | Retrieval settings (top-k, margin)   | Why was an answer one sentence long?                 | The 0.08 margin cut useful chunks; 12 and 0.12 fixed it                   | Done, one question only |
-| E3  | Eval set v1 and first baseline       | How good is dense search?                            | MRR 0.841, but the set was too easy                                       | Done                    |
-| E4  | Eval set v2 (long videos)            | Can a harder set separate strategies?                | Partly: top 1, top 3, MRR, nDCG can; hit rate at 5 still 100%             | Done, baseline saved    |
-| E5  | Reproducibility checks               | Is the eval deterministic and refactor-safe?         | Yes, four re-runs gave identical numbers                                  | Done                    |
-| E6  | Hybrid search v1 (dense + BM25, RRF) | Does adding exact-word search help?                  | No: MRR 0.818 to 0.815, paraphrases much worse                            | Done, not adopted       |
-| E7  | Weighted RRF (sparse weight 0 to 1)  | Does a smaller keyword vote fix the paraphrase drop? | Paraphrase drop shrinks as the weight falls; best MRR +0.02, within noise | Done, not adopted       |
-| E8+ | Stemming, reranker, ...              | See "Planned"                                        |                                                                           | Not run yet             |
+| #   | Experiment                                                | Question                                                           | Result                                                                                        | Status                   |
+| --- | --------------------------------------------------------- | ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- | ------------------------ |
+| E1  | Distance metrics                                          | Does cosine, dot product or Euclidean matter?                      | No, the three return almost the same chunks                                                   | Done, cosine kept        |
+| E2  | Retrieval settings (top-k, margin)                        | Why was an answer one sentence long?                               | The 0.08 margin cut useful chunks; 12 and 0.12 fixed it                                       | Done, one question only  |
+| E3  | Eval set v1 and first baseline                            | How good is dense search?                                          | MRR 0.841, but the set was too easy                                                           | Done                     |
+| E4  | Eval set v2 (long videos)                                 | Can a harder set separate strategies?                              | Partly: top 1, top 3, MRR, nDCG can; hit rate at 5 still 100%                                 | Done, baseline saved     |
+| E5  | Reproducibility checks                                    | Is the eval deterministic and refactor-safe?                       | Yes, four re-runs gave identical numbers                                                      | Done                     |
+| E6  | Hybrid search v1 (dense + BM25, RRF)                      | Does adding exact-word search help?                                | No: MRR 0.818 to 0.815, paraphrases much worse                                                | Done, not adopted        |
+| E7  | Weighted RRF (sparse weight 0 to 1)                       | Does a smaller keyword vote fix the paraphrase drop?               | Paraphrase drop shrinks as the weight falls; best MRR +0.02 (later shown to be noise, see E8) | Done, not adopted        |
+| E8  | Eval set v3 (45 new questions) and a held-out check of E7 | Does the weight chosen in E7 still help on questions it never saw? | No: MRR 0.801 (dense) against 0.779 (weight 0.3), and worse with more weight                  | Done, new baseline saved |
+| E9+ | Reranker, stemming, ...                                   | See "Planned"                                                      |                                                                                               | Not run yet              |
 
 The app still uses **dense search** (`SEARCH_STRATEGY` defaults to `dense`) because nothing has beaten the baseline yet.
 
 ## The yardstick
 
-All retrieval numbers below come from the same fixed eval: 41 questions on 5 videos (37 answerable, 4 not answerable from the videos), each labelled with a verbatim transcript quote. A retrieved chunk counts as correct if its time range overlaps a quote's time range, so the labels survive a change of chunking. Differences under about 5 points are noise: one question is worth 2.7 points of hit rate.
+All retrieval numbers come from a fixed eval where each question is labelled with a verbatim transcript quote. A retrieved chunk counts as correct if its time range overlaps a quote's time range, so the labels survive a change of chunking. Differences of a few points are noise: with 78 answerable questions one question is worth 1.3 points of hit rate.
 
-Baseline (E4): dense search, recursive chunking (1000 characters, 200 overlap), Gemini embeddings (768 dimensions), top-k 12, margin 0.12. Saved in [baseline.json](../server/eval/baseline.json).
+**Two question sets.** E3 to E7 used the earlier set (41 questions on 5 videos, 37 answerable, baseline MRR 0.818). From E8 on the set is 86 questions on 12 videos (78 answerable, baseline MRR 0.809). Numbers in E3 to E7 are on the earlier set unless the text says otherwise. The earlier baseline is kept in [baseline-v2-41-questions.json](../server/eval/results/baseline-v2-41-questions.json).
+
+Baseline (current, from E8): dense search, recursive chunking (1000 characters, 200 overlap), Gemini embeddings (768 dimensions), top-k 12, margin 0.12. Saved in [baseline.json](../server/eval/baseline.json).
 
 ## E1. Distance metrics
 
@@ -146,23 +149,78 @@ MRR 0.818 to 0.815. The model would receive 12 chunks instead of 9.8, holding 97
   - **The best weight is not a clear winner.** MRR is 0.839 at 0.3 but 0.821 at 0.4 and 0.832 at 0.5. A real effect would move smoothly. The gains are one or two questions each (at 0.3: q05 4 to 3, q35 2 to 1 and q41 4 to 1 moved up; q07 2 to 3, q16 2 to 3 and q30 3 to 8 moved down), and one question is worth 2.7 points of hit rate.
   - **I picked the best of 8 weights on the same 37 questions I score with.** The 0.3 result is the highest of several noisy numbers, so it is flattered. It would need a fresh set of questions to confirm.
 - **Conclusion:** weighted RRF reduces the paraphrase damage and keeps a small, uncertain gain. The best case is MRR +0.02, which I cannot tell apart from noise. **Not adopted**: the app stays on dense search. The weight stays available as `HYBRID_SPARSE_WEIGHT` and `--sparse-weight` for later experiments.
-- **What would settle it:** a larger, harder question set (especially more overview and exact-term questions), or a held-out set of new questions used only to check the chosen weight.
+- **What would settle it:** a larger, harder question set (especially more overview and exact-term questions), or a held-out set of new questions used only to check the chosen weight. **Done in E8: the gain at weight 0.3 did not hold up.**
+
+## E8. Eval set v3, and a held-out check of E7
+
+- **Why:** by E7 one question was worth 2.7 points, many differences were one question, and I had picked the best of 8 weights on the same questions I scored with. I needed more questions, and some that no choice had been made on.
+- **What I added:** 45 questions (q42 to q86), written by reading the stored transcripts and labelled with verbatim quotes. All 45 quotes were checked to appear in exactly one place in their video. The mix, chosen to make retrieval harder:
+
+| Type         | New | What they test                                                                                 |
+| ------------ | --- | ---------------------------------------------------------------------------------------------- |
+| fact         | 21  | Many with an exact term or number ("109 billion", "$6,500", "3072", "Opus 4.6", "Test Sprite") |
+| paraphrase   | 9   | Worded without the transcript's words ("go-ahead from a person" for "approval")                |
+| overview     | 5   | Whole-video questions                                                                          |
+| multi-video  | 4   | Two to four videos selected, only some relevant                                                |
+| list         | 2   | The four harness components, the three reasons to retrieve only relevant parts                 |
+| unanswerable | 4   | Topics checked to be absent from the selected videos                                           |
+
+Seven new videos: a 75-chunk coding tutorial (the same ideas repeat many times), **two videos about the same topic** (AI agent harnesses), **three beginner-investing videos** that overlap with each other and with the Howard Marks talk, and a **Hindi** video (two English questions about a Hindi transcript).
+
+- **New baseline (dense, all 86 questions, 78 answerable):**
+
+|                            | top 1 | top 3 | top 5 | top 10 |
+| -------------------------- | ----- | ----- | ----- | ------ |
+| Hit rate                   | 69%   | 91%   | 97%   | 100%   |
+| nDCG@k                     | 69%   | 71%   | 75%   | 80%    |
+| Random guessing (hit rate) | 6%    | 17%   | 27%   | 46%    |
+
+MRR 0.809 (was 0.818). By type: facts 0.931, lists 0.821, paraphrases 0.772, multi-video 0.643, overview 0.528. The set is harder in the way I wanted: random guessing at top 10 fell from 62% to 46%, and hit rate at top 5 is 97%, no longer stuck at 100%. Full table in [EVAL.md](EVAL.md).
+
+- **The held-out check.** The sparse weight 0.3 was chosen on q01 to q41. I ran the same settings on q42 to q86 only (`--only q42-q86`), 41 answerable questions that no choice was based on. Saved: [heldout-q42-q86-dense.json](../server/eval/results/heldout-q42-q86-dense.json) and the full run [v3-hybrid-w0.3.json](../server/eval/results/v3-hybrid-w0.3.json).
+
+| Questions               | Search             | hit@1 | hit@3 | hit@5 | nDCG@3 | MRR   | fact | list | overview | paraphrase | multi |
+| ----------------------- | ------------------ | ----- | ----- | ----- | ------ | ----- | ---- | ---- | -------- | ---------- | ----- |
+| **New 41 (held out)**   | dense              | 68%   | 90%   | 95%   | 70%    | 0.801 | 0.90 | 0.75 | 0.67     | 0.71       | 0.68  |
+|                         | hybrid, weight 0.3 | 66%   | 88%   | 93%   | 69%    | 0.779 | 0.93 | 0.75 | 0.67     | 0.54       | 0.69  |
+|                         | hybrid, weight 0.5 | 63%   | 85%   | 93%   | 67%    | 0.765 | 0.90 | 1.00 | 0.65     | 0.54       | 0.56  |
+|                         | hybrid, weight 1.0 | 61%   | 88%   | 90%   | 66%    | 0.753 | 0.89 | 0.75 | 0.75     | 0.53       | 0.54  |
+| Old 37 (used to choose) | dense              | 70%   | 92%   | 100%  |        | 0.818 |      |      |          |            |       |
+|                         | hybrid, weight 0.3 | 76%   | 95%   | 97%   |        | 0.839 |      |      |          |            |       |
+| **All 78**              | dense              | 69%   | 91%   | 97%   | 71%    | 0.809 | 0.93 | 0.82 | 0.53     | 0.77       | 0.64  |
+|                         | hybrid, weight 0.3 | 71%   | 91%   | 95%   | 70%    | 0.807 | 0.96 | 0.83 | 0.49     | 0.67       | 0.73  |
+|                         | hybrid, weight 0.5 | 68%   | 88%   | 95%   | 69%    | 0.797 | 0.95 | 0.93 | 0.50     | 0.63       | 0.68  |
+|                         | hybrid, weight 1.0 | 65%   | 88%   | 94%   | 66%    | 0.782 | 0.94 | 0.86 | 0.55     | 0.59       | 0.66  |
+
+- **What this shows:**
+  - **The E7 gain was selection noise.** On the questions it was chosen on, weight 0.3 gained 0.021 MRR (0.818 to 0.839). On 41 new questions the same weight **lost** 0.022 (0.801 to 0.779). Over all 78 the two cancel (0.809 against 0.807).
+  - **On new questions, more keyword weight is worse, every step:** MRR 0.801, 0.779, 0.765, 0.753 for weights 0, 0.3, 0.5, 1.0.
+  - **The paraphrase damage is real.** Paraphrase MRR fell on the old questions (0.857 to 0.833 at weight 0.3, to 0.67 at 1.0) and on the new ones (0.71 to 0.54). Two sets, same direction. On the new set the worst single move at weight 0.3 was q59 ("Why is it better to invest a bit every month than to wait for the perfect moment?") from rank 1 to rank 9, and q69 ("What do you call it when the answer appears piece by piece...") from rank 10 to outside the top 10.
+  - **The facts gain did not replicate beyond one weight:** facts rose a little at weight 0.3 (0.90 to 0.93 on the new set) and not at 0.5 or 1.0. Lists and multi-video questions had no consistent gain.
+- **A likely reason the exact-term questions did not help (checked in part):** dense search already put the right chunk first for 18 of the 21 new fact questions, so a keyword list had little left to fix. The three it missed were q56 (rank 2), q66 (rank 9) and q72 (rank 3). I did not check why the keyword list still did not rescue q66, the "3072" question.
+- **Conclusion:** hybrid search with this tokenizer and RRF does **not** beat dense search on this eval, at any weight. It is not adopted, and the earlier "small gain at 0.3" is withdrawn. The weight option stays in the code. This is the most useful thing the log has so far for an interview: a promising result that did not survive new data.
+- **Caveats:**
+  - 41 held-out questions is still small. A difference of 0.02 MRR is about one question, so "worse by 0.022" is weak on its own. The reasons to believe it are the direction at every weight and the paraphrase drop appearing on both sets.
+  - I wrote the new questions after reading the transcripts. That favours wording the transcripts contain, which should help keyword search, not hurt it, so it does not explain the result in hybrid's disfavour.
+  - The tokenizer **removes Hindi vowel marks** (it strips accents with a rule that also hits Devanagari: "जून" becomes "जन", "बिलियन" becomes "बलयन"), so keyword search on the Hindi video is damaged as well as useless for English questions. It touches only that video's questions (2 of 41). Known bug, not fixed yet.
+  - Keyword search also depends on caption quality: auto-generated captions mishear words, so an exact term can be missing from the transcript.
 
 ## Planned (not run yet)
 
 Each is a small change judged on the same eval. Add a result below when it is run.
 
-| Idea                              | What it tests                                                                               |
-| --------------------------------- | ------------------------------------------------------------------------------------------- |
-| Fewer sparse candidates (5 to 10) | Does less noise in the sparse list help?                                                    |
-| Stemming in the tokenizer         | "customer"/"customers", "pay"/"paid" match, so the sparse list gets better                  |
-| Reranker                          | Does reordering the top candidates with a cross-encoder fix near-ties?                      |
-| Query optimisation                | Do rewritten or expanded questions retrieve better than the raw question?                   |
-| Chunking variants                 | Sentence-aware, time-window, different sizes, parent-child; needs a collection per strategy |
-| 768 against 3072 dimensions       | Does the smaller embedding lose quality?                                                    |
-| Correcting misheard terms         | Does fixing "superbase" to "Supabase" in the transcript help?                               |
-| Margin and top-k tuning           | Tune 12 and 0.12 on the eval instead of one question                                        |
-| "No answer" detection             | LLM check on the retrieved chunks, or the gap between the first and second score            |
+| Idea                                                | What it tests                                                                                                    |
+| --------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Fewer sparse candidates (5 to 10)                   | Does less noise in the sparse list help?                                                                         |
+| Fix Hindi (Devanagari) vowel marks in the tokenizer | Strip accents only from Latin letters, keep the marks of other scripts; rebuild the sparse vectors (found in E8) |
+| Stemming in the tokenizer                           | "customer"/"customers", "pay"/"paid" match, so the sparse list gets better                                       |
+| Reranker                                            | Does reordering the top candidates with a cross-encoder fix near-ties?                                           |
+| Query optimisation                                  | Do rewritten or expanded questions retrieve better than the raw question?                                        |
+| Chunking variants                                   | Sentence-aware, time-window, different sizes, parent-child; needs a collection per strategy                      |
+| 768 against 3072 dimensions                         | Does the smaller embedding lose quality?                                                                         |
+| Correcting misheard terms                           | Does fixing "superbase" to "Supabase" in the transcript help?                                                    |
+| Margin and top-k tuning                             | Tune 12 and 0.12 on the eval instead of one question                                                             |
+| "No answer" detection                               | LLM check on the retrieved chunks, or the gap between the first and second score                                 |
 
 ## Other measurements (not retrieval experiments)
 
@@ -174,20 +232,20 @@ Each is a small change judged on the same eval. Add a result below when it is ru
 
 ## Interview cheat sheet
 
-**One-minute story.** I built a chat-with-YouTube-videos RAG app, then did not trust my own impression of its quality, so I built a retrieval eval first: 41 questions labelled with transcript quotes mapped to time ranges, so labels survive chunking changes. Every change is judged by numbers against a saved baseline. Hybrid search was the first real experiment and it did not beat dense. I tested my explanation by turning the keyword list down, which shrank the damage but gave no gain I could tell from noise.
+**One-minute story.** I built a chat-with-YouTube-videos RAG app, then did not trust my own impression of its quality, so I built a retrieval eval first: 86 questions labelled with transcript quotes mapped to time ranges, so labels survive chunking changes. Every change is judged by numbers against a saved baseline. Hybrid search was the first real experiment and it did not beat dense. Turning the keyword list down looked like a small win on the questions I tuned on, so I added 45 new questions and checked on those: the win disappeared and hybrid was worse at every weight. I dropped it.
 
 **Questions I should be able to answer**
 
 - _Why did you build an eval before improving retrieval?_ Without it I could not tell a real gain from a lucky question. A first look at one question said answers were too short; the fix looked good but was never measured (E2). The eval fixed that.
 - _How do you label ground truth without fixed chunk ids?_ The label is a verbatim quote from the transcript. The code finds its time span (with padding) and a chunk is correct if its time range overlaps. If chunking changes, the labels still work.
 - _What do hit rate, recall, precision, MRR and nDCG tell you?_ Hit rate: was any correct chunk in the top k. Recall@k: share of the evidence quotes found. Precision@k: share of the top k that is correct. MRR: how high the first correct chunk is, on average. nDCG: rewards correct chunks being higher up.
-- _Why not compare on hit rate at 5 or 10?_ It saturates at 100%, so it cannot show a difference (E4).
+- _Why not compare on hit rate at 5 or 10?_ On the earlier set it was 100% from top 5, so it could not show a difference (E4). On the 86-question set it is 97% at top 5 and 100% at top 10, still too flat to compare on. Top 1, top 3, MRR and nDCG move more.
 - _What is hybrid search?_ Dense search finds meaning, BM25 finds exact words. Merge the two ranked lists.
 - _What is BM25?_ Score a chunk by the words it shares with the question, weighted by how rare the word is (IDF), how often it appears in the chunk (with diminishing returns, capped by k1), and a correction for chunk length (b).
 - _Why RRF, and not just add the scores?_ The two scores are on different scales (cosine about 0.5 to 0.8, BM25 up to double digits). RRF uses only ranks: `1/(60+rank)` from each list.
 - _Why did hybrid not help?_ It helped questions that name specific things (facts, lists, multi-video) and hurt paraphrases, whose wording is not in the transcript, so the keyword list adds noise. I tested that by weighting the keyword list from 0 to 1: paraphrase MRR fell steadily as the weight went up (0.86 down to 0.67). A weight of 0.3 gave the best MRR (0.839 against 0.818), but the curve is bumpy and the gain is one or two questions, so I did not adopt it.
-- _You tried 8 weights and picked the best, isn't that overfitting?_ Yes, that is why I do not claim the win. I scored the weights on the same 37 questions I picked from, so the best number is flattered. I would confirm a weight on questions that were not used to choose it.
-- _What would you do differently?_ A bigger, harder question set. Right now one question is 2.7 points, so only consistent moves across several metrics mean something.
+- _You tried 8 weights and picked the best, isn't that overfitting?_ Yes, and I checked it. The best weight (0.3) gained 0.021 MRR on the 37 questions I chose it on, but on 41 new questions it lost 0.022 (0.801 to 0.779) and more keyword weight was worse at every step. So I withdrew the win. Choosing on one set and confirming on a fresh one is why I keep the new questions separate (`--only q42-q86`).
+- _What would you do differently?_ A bigger question set written by someone who has not read the videos. Now one question is 1.3 points, which is better, but a change of one or two questions is still noise, so only consistent moves across several metrics and across two sets mean something.
 - _Is your eval deterministic?_ Yes. Identical numbers across four re-runs (E5). The noise that is left is the question set size.
 - _Why did you build the eval yourself and not use Ragas, DeepEval or LangSmith?_ Ragas and DeepEval are Python, and LangSmith is hosted and would send data out. The stack is TypeScript and free tiers, and the retrieval metrics are simple to write and to explain.
 - _Why store a sparse vector in Qdrant instead of searching in memory?_ Qdrant filters by video and applies IDF itself, and it keeps the dense and sparse vectors together on each point.
@@ -195,18 +253,18 @@ Each is a small change judged on the same eval. Add a result below when it is ru
 
 **Numbers worth remembering**
 
-| What                                   | Number                                             |
-| -------------------------------------- | -------------------------------------------------- |
-| Eval set                               | 41 questions, 37 answerable, 5 videos              |
-| Baseline (dense)                       | MRR 0.818, hit rate 70% at 1, 92% at 3             |
-| Hit rate at top 5                      | 100% (saturated, do not use)                       |
-| Weakest question type                  | Overview, MRR 0.354                                |
-| One question is worth                  | 2.7 points of hit rate                             |
-| Hybrid v1 (equal weights)              | MRR 0.815, paraphrase MRR 0.857 to 0.671           |
-| Weighted RRF, best (sparse weight 0.3) | MRR 0.839, a gain of 1 to 2 questions, not adopted |
-| Chunks                                 | 375 in total, about 1000 characters                |
-| BM25 / RRF constants                   | k1 1.2, b 0.75, RRF k 60                           |
-| Gemini against Groq, same prompt       | 193 s against 0.96 s                               |
+| What                             | Number                                       |
+| -------------------------------- | -------------------------------------------- |
+| Eval set                         | 86 questions, 78 answerable, 12 videos       |
+| Baseline (dense)                 | MRR 0.809, hit rate 69% at 1, 91% at 3       |
+| Hit rate at top 5                | 97% (100% at top 10, too flat to compare on) |
+| Weakest question type            | Overview, MRR 0.528 (multi-video 0.643)      |
+| One question is worth            | 1.3 points of hit rate                       |
+| Hybrid v1 (equal weights)        | MRR 0.815, paraphrase MRR 0.857 to 0.671     |
+| Weighted RRF (weight 0.3)        | Old set +0.021 MRR, new set -0.022: not real |
+| Chunks                           | 375 in total, about 1000 characters          |
+| BM25 / RRF constants             | k1 1.2, b 0.75, RRF k 60                     |
+| Gemini against Groq, same prompt | 193 s against 0.96 s                         |
 
 ## How to add an entry
 
