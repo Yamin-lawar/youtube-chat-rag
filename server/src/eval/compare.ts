@@ -75,9 +75,11 @@ export function compareRuns(before: RunRecord, after: RunRecord): Comparison {
 const points = (value: number) => Math.round(value * 100);
 const signed = (n: number, digits = 0) => (n > 0 ? `+${n.toFixed(digits)}` : n.toFixed(digits));
 const describe = (run: RunRecord) => {
-  const { search, sparseWeight, reranker } = run.settings;
+  const { search, sparseWeight, reranker, expansion } = run.settings;
   const searchText = search && sparseWeight !== undefined ? `${search} ${sparseWeight}` : search;
-  const how = reranker ? `${searchText} + ${reranker}` : searchText;
+  const how = [searchText, expansion && `expansion ${expansion}`, reranker]
+    .filter(Boolean)
+    .join(' + ');
   const parts = [how, run.createdAt.slice(0, 10), run.commit && `commit ${run.commit}`];
   return `"${run.label}" (${parts.filter(Boolean).join(', ')})`;
 };
@@ -92,6 +94,7 @@ const OPTIONAL_SETTINGS = new Set<keyof RunSettings>([
   'sparseWeight',
   'reranker',
   'rerankCandidates',
+  'expansion',
 ]);
 
 function settingChanges(before: RunSettings, after: RunSettings): string[] {

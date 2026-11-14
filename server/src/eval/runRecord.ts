@@ -25,6 +25,8 @@ export interface RunSettings {
   /** Only when a reranker was used: its name and how many candidates it was given. */
   reranker?: string;
   rerankCandidates?: number;
+  /** Only when query expansion was used: its mode (hyde, hyde+q or multi). */
+  expansion?: string;
 }
 
 export interface QuestionResult {

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { EXPANSION_NAMES } from './rag/expansion/names.js';
 import { RERANKER_NAMES } from './rag/rerank/names.js';
 import { SEARCH_STRATEGIES } from './rag/search/types.js';
 
@@ -19,6 +20,8 @@ const envSchema = z.object({
   HYBRID_SPARSE_WEIGHT: z.coerce.number().min(0).default(1),
   // Re-order the search results with a local model: none (default), minilm or bge-m3.
   RERANKER: z.enum(RERANKER_NAMES).default('none'),
+  // Search with extra model-written texts as well as the question: none (default), hyde, hyde+q or multi.
+  QUERY_EXPANSION: z.enum(EXPANSION_NAMES).default('none'),
 });
 
 const parsed = envSchema.safeParse(process.env);

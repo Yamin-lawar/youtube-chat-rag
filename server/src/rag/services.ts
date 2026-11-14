@@ -3,7 +3,7 @@ import { config } from '../config.js';
 import { RecursiveChunker } from './chunking/recursiveChunker.js';
 import type { Chunker } from './chunking/types.js';
 import { EMBEDDING_DIMENSIONS, GeminiEmbedder, type Embedder } from './embeddings/embedder.js';
-import { createGenerator, createRewriter } from './generation/providers.js';
+import { createGenerator, createQueryExpansion, createRewriter } from './generation/providers.js';
 import type { Generator } from './generation/types.js';
 import type { QuestionRewriter } from './rewriting/types.js';
 import { createReranker } from './rerank/models.js';
@@ -50,6 +50,7 @@ export function getRagServices(): RagServices {
         embedder,
         store,
         sparseWeight: config.HYBRID_SPARSE_WEIGHT,
+        expansion: createQueryExpansion(config.QUERY_EXPANSION, keys),
         reranker: createReranker(config.RERANKER),
       }),
       generator: createGenerator(keys),

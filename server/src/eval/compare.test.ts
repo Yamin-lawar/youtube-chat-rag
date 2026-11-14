@@ -122,4 +122,15 @@ describe('formatComparison', () => {
     expect(text).toContain('reranker none -> minilm');
     expect(text).toContain('rerankCandidates none -> 20');
   });
+
+  it('names the expansion in the header, before the reranker, and shows "none" on the run without', () => {
+    const before = run('baseline', { q1: 1 });
+    const after = {
+      ...run('expanded', { q1: 1 }),
+      settings: { ...settings, expansion: 'hyde', reranker: 'bge-m3', rerankCandidates: 20 },
+    };
+    const text = formatComparison(compareRuns(before, after));
+    expect(text).toContain('(dense + expansion hyde + bge-m3, 2026-01-01');
+    expect(text).toContain('expansion none -> hyde');
+  });
 });

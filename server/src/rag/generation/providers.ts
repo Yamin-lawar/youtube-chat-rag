@@ -3,6 +3,9 @@ import { ChatGroq } from '@langchain/groq';
 import type { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import { ChatModelGenerator } from './chatModelGenerator.js';
 import { FallbackGenerator } from './fallbackGenerator.js';
+import { LlmQueryExpander } from '../expansion/llmQueryExpander.js';
+import { EXPANSION_MODES, type ExpansionName } from '../expansion/names.js';
+import type { Expansion } from '../expansion/types.js';
 import { LlmQuestionRewriter } from '../rewriting/llmQuestionRewriter.js';
 import type { QuestionRewriter } from '../rewriting/types.js';
 import type { Generator } from './types.js';
@@ -14,6 +17,8 @@ export const GROQ_MODEL = 'openai/gpt-oss-120b';
 const ANSWER_TEMPERATURE = 0.2;
 // Rewriting should be repeatable: the same follow-up should always give the same question.
 const REWRITE_TEMPERATURE = 0;
+// Expansion is repeatable for the same reason: a search should not change between two runs.
+const EXPANSION_TEMPERATURE = 0;
 
 export interface GeneratorKeys {
   googleApiKey?: string | undefined;
@@ -71,4 +76,20 @@ export function createGenerator(keys: GeneratorKeys): Generator {
 /** The query rewriter, using the same providers and fallback order as the generator. */
 export function createRewriter(keys: GeneratorKeys): QuestionRewriter {
   return new LlmQuestionRewriter(buildModels(keys, REWRITE_TEMPERATURE));
+}
+
+/**
+ * The query expansion for a mode, using the same providers and fallback order as the generator.
+ * Returns undefined for `none`, which means the question is searched as it is.
+ */
+export function createQueryExpansion(
+  name: ExpansionName,
+  keys: GeneratorKeys,
+): Expansion | undefined {
+  if (name === 'none') return undefined;
+  const { prompt, keepOriginal } = EXPANSION_MODES[name];
+  return {
+    expander: new LlmQueryExpander(prompt, buildModels(keys, EXPANSION_TEMPERATURE)),
+    keepOriginal,
+  };
 }

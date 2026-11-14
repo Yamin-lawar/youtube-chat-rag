@@ -6,6 +6,7 @@
 //   npm run eval --workspace server -- --strategy hybrid   dense (default) or hybrid
 //   npm run eval --workspace server -- --strategy hybrid --sparse-weight 0.5   hybrid, keyword list counts half
 //   npm run eval --workspace server -- --reranker minilm    re-order the results with a local model (minilm, bge-m3)
+//   npm run eval --workspace server -- --expansion hyde     search with a model-written passage (hyde, hyde+q, multi)
 //   npm run eval --workspace server -- --only q42-q86      score only some questions (ids and ranges)
 //   (or) npx tsx --env-file=../.env scripts/eval.ts
 //
@@ -30,6 +31,10 @@ import { buildRunRecord } from '../src/eval/runRecord.js';
 import { currentCommit, loadRun, saveRun, writeRun } from '../src/eval/runStore.js';
 import type { EvalQuestion } from '../src/eval/types.js';
 import { CachingEmbedder } from '../src/rag/embeddings/cachingEmbedder.js';
+import { CachingQueryExpander } from '../src/rag/expansion/cachingQueryExpander.js';
+import { EXPANSION_NAMES, type ExpansionName } from '../src/rag/expansion/names.js';
+import { createQueryExpansion } from '../src/rag/generation/providers.js';
+import { retryOnLimit } from '../src/eval/retryOnLimit.js';
 import { EMBEDDING_DIMENSIONS, GeminiEmbedder } from '../src/rag/embeddings/embedder.js';
 import { DEFAULT_TOP_K, keepNearBest } from '../src/rag/retrieval/retriever.js';
 import { createReranker } from '../src/rag/rerank/models.js';
@@ -48,6 +53,7 @@ const { values: args } = parseArgs({
     'sparse-weight': { type: 'string' },
     only: { type: 'string' },
     reranker: { type: 'string' },
+    expansion: { type: 'string' },
   },
 });
 
@@ -59,6 +65,11 @@ if (!SEARCH_STRATEGIES.includes(strategyName)) {
 const rerankerName = (args.reranker ?? config.RERANKER) as RerankerName;
 if (!RERANKER_NAMES.includes(rerankerName)) {
   console.error(`Unknown reranker "${rerankerName}". Use one of: ${RERANKER_NAMES.join(', ')}`);
+  process.exit(1);
+}
+const expansionName = (args.expansion ?? config.QUERY_EXPANSION) as ExpansionName;
+if (!EXPANSION_NAMES.includes(expansionName)) {
+  console.error(`Unknown expansion "${expansionName}". Use one of: ${EXPANSION_NAMES.join(', ')}`);
   process.exit(1);
 }
 const sparseWeight = args['sparse-weight']
@@ -96,18 +107,54 @@ const embedder = new CachingEmbedder(
   new GeminiEmbedder(config.GOOGLE_API_KEY),
   `${evalDir}cache/query-embeddings.json`,
 );
+// Expansion in the eval: Groq only (temperature 0), so every run searches with the same text and
+// one provider is never swapped for another halfway. Texts are cached in a file (git-ignored).
+const rawExpansion = createQueryExpansion(expansionName, { groqApiKey: config.GROQ_API_KEY });
+const expander = rawExpansion
+  ? new CachingQueryExpander(rawExpansion.expander, `${evalDir}cache/query-expansions.json`)
+  : undefined;
 const search = createSearch(strategyName, {
   embedder,
   store,
   sparseWeight,
+  expansion: rawExpansion && expander && { ...rawExpansion, expander },
   reranker: createReranker(rerankerName),
 });
 
-const missing = await embedder.countMissing(questions.map((q) => q.question));
+// Write every expansion before searching, so a model failure stops the run here. Inside the
+// search it would be swallowed (the app falls back to the plain question), and the eval would
+// then score the plain question as if it were the expansion.
+const questionTexts = questions.map((q) => q.question);
+const searchedTexts = [...questionTexts];
+if (expander && rawExpansion) {
+  const toWrite = await expander.countMissing(questionTexts);
+  console.log(
+    `Expansions (${expansionName}): ${questionTexts.length - toWrite} cached, ${toWrite} to write with the model (about ${toWrite * 400} tokens).`,
+  );
+  let written = 0;
+  for (const text of questionTexts) {
+    try {
+      const before = await expander.countMissing([text]);
+      const texts = await retryOnLimit(() => expander.expand(text));
+      if (before > 0) console.log(`  [${++written}/${toWrite}] ${text.slice(0, 60)}`);
+      if (!rawExpansion.keepOriginal) searchedTexts.splice(searchedTexts.indexOf(text), 1);
+      searchedTexts.push(...texts);
+    } catch (error) {
+      console.error(
+        `\nStopped while writing expansions (${written} of ${toWrite} written, all saved). ` +
+          `Run the same command again to continue.\n${error instanceof Error ? error.message : String(error)}`,
+      );
+      process.exit(1);
+    }
+  }
+}
+
+const missing = await embedder.countMissing(searchedTexts);
+const searchedCount = new Set(searchedTexts).size;
 console.log(
   missing === 0
-    ? `Question embeddings: all ${questions.length} cached, no Gemini requests needed.`
-    : `Question embeddings: ${questions.length - missing} cached, ${missing} to fetch ` +
+    ? `Question embeddings: all ${searchedCount} cached, no Gemini requests needed.`
+    : `Question embeddings: ${searchedCount - missing} cached, ${missing} to fetch ` +
         `(uses ${missing} of the 1000 free Gemini requests a day).`,
 );
 
@@ -176,7 +223,7 @@ console.log(
   `\nRetrieval eval: ${answerable.length} answerable questions, ${unanswerableTopScores.length} unanswerable`,
 );
 console.log(
-  `Settings: search ${search.name}${search.name === 'hybrid' ? ` (sparse weight ${sparseWeight})` : ''}${rerankerName !== 'none' ? `, reranker ${rerankerName} on ${RERANK_CANDIDATES} candidates` : ''}, topK ${DEFAULT_TOP_K}, margin ${search.maxScoreDrop}, chunking recursive 1000/200\n`,
+  `Settings: search ${search.name}${search.name === 'hybrid' ? ` (sparse weight ${sparseWeight})` : ''}${expansionName !== 'none' ? `, expansion ${expansionName}` : ''}${rerankerName !== 'none' ? `, reranker ${rerankerName} on ${RERANK_CANDIDATES} candidates` : ''}, topK ${DEFAULT_TOP_K}, margin ${search.maxScoreDrop}, chunking recursive 1000/200\n`,
 );
 
 const atEachK = (pick: (r: Result, k: number) => number) =>
@@ -275,6 +322,7 @@ const record = buildRunRecord(
       maxScoreDrop: Number.isFinite(search.maxScoreDrop) ? search.maxScoreDrop : null,
       chunking: new RecursiveChunker().name,
       ...(search.name === 'hybrid' ? { sparseWeight } : {}),
+      ...(expansionName !== 'none' ? { expansion: expansionName } : {}),
       ...(rerankerName !== 'none'
         ? { reranker: rerankerName, rerankCandidates: RERANK_CANDIDATES }
         : {}),

@@ -19,7 +19,7 @@ import { citationPrecision, citesEvidence, isRefusal } from '../src/eval/answerC
 import { findEvidenceSpans } from '../src/eval/evidence.js';
 import { mean } from '../src/eval/metrics.js';
 import { loadQuestions, selectQuestions } from '../src/eval/questions.js';
-import { parseRateLimit } from '../src/eval/rateLimit.js';
+import { retryOnLimit } from '../src/eval/retryOnLimit.js';
 import type { EvalQuestion } from '../src/eval/types.js';
 import { CachingEmbedder } from '../src/rag/embeddings/cachingEmbedder.js';
 import { EMBEDDING_DIMENSIONS, GeminiEmbedder } from '../src/rag/embeddings/embedder.js';
@@ -132,27 +132,12 @@ console.log(
 );
 if (args['dry-run']) process.exit(0);
 
-const MAX_MINUTE_WAITS = 8;
-
-/** Writes one answer. A per-minute limit or a short overload is waited out, anything else is thrown. */
-async function writeAnswer(item: Prepared) {
-  for (let waits = 0; ; waits++) {
-    try {
-      return await generator.generate(item.question.question, item.chunks);
-    } catch (error) {
-      const limit = parseRateLimit(error instanceof Error ? error.message : String(error));
-      if (limit?.window !== 'minute' || waits >= MAX_MINUTE_WAITS) throw error;
-      const seconds = Math.ceil(limit.waitSeconds) + 1;
-      console.log(`  provider busy or rate limited (per minute), waiting ${seconds}s`);
-      await new Promise((resolve) => setTimeout(resolve, seconds * 1000));
-    }
-  }
-}
-
 // 3. Write the missing answers one by one, saving each, and stop cleanly on the first failure.
 for (const [i, item] of toWrite.entries()) {
   try {
-    const answer = await writeAnswer(item);
+    const answer = await retryOnLimit(() =>
+      generator.generate(item.question.question, item.chunks),
+    );
     await cache.set(item.key, { text: answer.text, model: answer.model });
     console.log(`  [${i + 1}/${toWrite.length}] ${item.question.id} done`);
   } catch (error) {

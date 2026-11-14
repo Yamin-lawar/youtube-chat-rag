@@ -121,6 +121,10 @@ npm run eval --workspace server -- --strategy hybrid --sparse-weight 0.3 --label
 # re-order the search results with a local reranker model (downloaded on the first run)
 npm run eval --workspace server -- --reranker minilm --label dense-minilm
 
+# search with extra texts written by an LLM (hyde, hyde+q, multi). Writes them first and caches them in
+# eval/cache/query-expansions.json. Pass --reranker none, or the RERANKER in .env is used.
+npm run eval --workspace server -- --expansion multi --reranker none --label dense-multi
+
 # score only some questions: ids and ranges in file order (cannot be combined with --save-baseline)
 npm run eval --workspace server -- --only q42-q86 --label new-questions
 
