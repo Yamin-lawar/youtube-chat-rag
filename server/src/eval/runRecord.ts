@@ -49,7 +49,10 @@ export interface RunRecord {
   metrics: Record<MetricName, Record<number, number>>;
   mrr: number;
   mrrByType: Record<string, number>;
-  kept: { evidenceRecall: number; chunks: number };
+  /** `chars` is missing from runs saved before it was recorded. */
+  kept: { evidenceRecall: number; chunks: number; chars?: number };
+  /** Only when the run used --budget: how the first N characters of results did. */
+  budget?: { characters: number; hitRate: number; evidenceRecall: number; chunks: number };
   /** Null when there were no questions of that kind. */
   topScores: { answerableMin: number | null; unanswerableMax: number | null };
   questions: Record<string, QuestionResult>;
@@ -64,6 +67,8 @@ export interface ScoredQuestion {
   topScore: number;
   keptRecall: number;
   keptCount: number;
+  keptChars: number;
+  budget?: { chunks: number; recall: number };
 }
 
 export interface RunInfo {
@@ -71,6 +76,18 @@ export interface RunInfo {
   commit: string | null;
   settings: RunSettings;
   now?: Date;
+  /** The --budget the run used, in characters. */
+  budgetCharacters?: number;
+}
+
+function budgetSummary(characters: number, answerable: ScoredQuestion[]) {
+  const budgets = answerable.flatMap((q) => (q.budget ? [q.budget] : []));
+  return {
+    characters,
+    hitRate: mean(budgets.map((b) => (b.recall > 0 ? 1 : 0))),
+    evidenceRecall: mean(budgets.map((b) => b.recall)),
+    chunks: mean(budgets.map((b) => b.chunks)),
+  };
 }
 
 export function buildRunRecord(
@@ -107,7 +124,11 @@ export function buildRunRecord(
     kept: {
       evidenceRecall: mean(answerable.map((q) => q.keptRecall)),
       chunks: mean(answerable.map((q) => q.keptCount)),
+      chars: mean(answerable.map((q) => q.keptChars)),
     },
+    ...(info.budgetCharacters !== undefined
+      ? { budget: budgetSummary(info.budgetCharacters, answerable) }
+      : {}),
     topScores: {
       answerableMin: answerableTops.length > 0 ? Math.min(...answerableTops) : null,
       unanswerableMax: unanswerableTopScores.length > 0 ? Math.max(...unanswerableTopScores) : null,

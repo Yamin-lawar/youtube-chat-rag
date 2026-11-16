@@ -2,6 +2,9 @@ import { RecursiveCharacterTextSplitter } from '@langchain/textsplitters';
 import type { Transcript } from '../transcript/types.js';
 import type { Chunk, Chunker } from './types.js';
 
+export const DEFAULT_CHUNK_SIZE = 1000;
+export const DEFAULT_CHUNK_OVERLAP = 200;
+
 export interface RecursiveChunkerOptions {
   chunkSize?: number;
   chunkOverlap?: number;
@@ -16,11 +19,23 @@ export interface RecursiveChunkerOptions {
  * look up which segments each chunk covers.
  */
 export class RecursiveChunker implements Chunker {
-  readonly name = 'recursive';
+  /**
+   * Names the collection the chunks are stored in, so it must differ when the settings differ,
+   * or a 500-character run would be mixed into the 1000-character one. The default keeps the
+   * plain name "recursive", so the collection and the saved runs made before this stay valid.
+   */
+  readonly name: string;
   private readonly splitter: RecursiveCharacterTextSplitter;
 
-  constructor({ chunkSize = 1000, chunkOverlap = 200 }: RecursiveChunkerOptions = {}) {
+  constructor({
+    chunkSize = DEFAULT_CHUNK_SIZE,
+    chunkOverlap = DEFAULT_CHUNK_OVERLAP,
+  }: RecursiveChunkerOptions = {}) {
     this.splitter = new RecursiveCharacterTextSplitter({ chunkSize, chunkOverlap });
+    this.name =
+      chunkSize === DEFAULT_CHUNK_SIZE && chunkOverlap === DEFAULT_CHUNK_OVERLAP
+        ? 'recursive'
+        : `recursive-${chunkSize}-${chunkOverlap}`;
   }
 
   async chunk(transcript: Transcript): Promise<Chunk[]> {

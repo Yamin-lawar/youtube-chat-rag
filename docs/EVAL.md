@@ -125,6 +125,12 @@ npm run eval --workspace server -- --reranker minilm --label dense-minilm
 # eval/cache/query-expansions.json. Pass --reranker none, or the RERANKER in .env is used.
 npm run eval --workspace server -- --expansion multi --reranker none --label dense-multi
 
+# search another chunking (size/overlap in characters). Ingest it first, one Qdrant collection per variant:
+#   npm run ingest:eval --workspace server -- --chunking 500/100 --dry-run   (counts the chunks and Gemini requests)
+#   npm run ingest:eval --workspace server -- --chunking 500/100
+# --budget 10000 also scores the first 10,000 characters of results, so chunk sizes compare at equal text (E12).
+npm run eval --workspace server -- --chunking 500/100 --budget 10000 --reranker none --label chunks-500
+
 # score only some questions: ids and ranges in file order (cannot be combined with --save-baseline)
 npm run eval --workspace server -- --only q42-q86 --label new-questions
 

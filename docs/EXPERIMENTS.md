@@ -6,20 +6,21 @@ How the numbers are produced is in [EVAL.md](EVAL.md). The per-block notes (what
 
 ## Summary
 
-| #    | Experiment                                                | Question                                                           | Result                                                                                              | Status                    |
-| ---- | --------------------------------------------------------- | ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------- | ------------------------- |
-| E1   | Distance metrics                                          | Does cosine, dot product or Euclidean matter?                      | No, the three return almost the same chunks                                                         | Done, cosine kept         |
-| E2   | Retrieval settings (top-k, margin)                        | Why was an answer one sentence long?                               | The 0.08 margin cut useful chunks; 12 and 0.12 fixed it                                             | Done, one question only   |
-| E3   | Eval set v1 and first baseline                            | How good is dense search?                                          | MRR 0.841, but the set was too easy                                                                 | Done                      |
-| E4   | Eval set v2 (long videos)                                 | Can a harder set separate strategies?                              | Partly: top 1, top 3, MRR, nDCG can; hit rate at 5 still 100%                                       | Done, baseline saved      |
-| E5   | Reproducibility checks                                    | Is the eval deterministic and refactor-safe?                       | Yes, four re-runs gave identical numbers                                                            | Done                      |
-| E6   | Hybrid search v1 (dense + BM25, RRF)                      | Does adding exact-word search help?                                | No: MRR 0.818 to 0.815, paraphrases much worse                                                      | Done, not adopted         |
-| E7   | Weighted RRF (sparse weight 0 to 1)                       | Does a smaller keyword vote fix the paraphrase drop?               | Paraphrase drop shrinks as the weight falls; best MRR +0.02 (later shown to be noise, see E8)       | Done, not adopted         |
-| E8   | Eval set v3 (45 new questions) and a held-out check of E7 | Does the weight chosen in E7 still help on questions it never saw? | No: MRR 0.801 (dense) against 0.779 (weight 0.3), and worse with more weight                        | Done, new baseline saved  |
-| E9   | Reranker (cross-encoder on the top 20)                    | Does reading question and chunk together fix the order?            | minilm: worse on both sets. bge-m3: MRR 0.801 to 0.888 on held-out, flat on old set                 | Done, bge-m3 promising    |
-| E10  | Answer-level check of the reranker                        | Does the reranker change refusals or answers, not just ranks?      | No change on 8 unanswerable and 15 answerable questions; only 23 of 86 could be run (quota)         | Done in part, quota-bound |
-| E11  | Query expansion (hyde, hyde+q, multi)                     | Does letting an LLM rewrite the question before searching help?    | No: MRR 0.809 to 0.755 / 0.793 / 0.803. Better on the old 37 questions, worse on the new 41 (again) | Done, not adopted         |
-| E12+ | Stemming, ...                                             | See "Planned"                                                      |                                                                                                     | Not run yet               |
+| #    | Experiment                                                | Question                                                           | Result                                                                                                   | Status                    |
+| ---- | --------------------------------------------------------- | ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------- | ------------------------- |
+| E1   | Distance metrics                                          | Does cosine, dot product or Euclidean matter?                      | No, the three return almost the same chunks                                                              | Done, cosine kept         |
+| E2   | Retrieval settings (top-k, margin)                        | Why was an answer one sentence long?                               | The 0.08 margin cut useful chunks; 12 and 0.12 fixed it                                                  | Done, one question only   |
+| E3   | Eval set v1 and first baseline                            | How good is dense search?                                          | MRR 0.841, but the set was too easy                                                                      | Done                      |
+| E4   | Eval set v2 (long videos)                                 | Can a harder set separate strategies?                              | Partly: top 1, top 3, MRR, nDCG can; hit rate at 5 still 100%                                            | Done, baseline saved      |
+| E5   | Reproducibility checks                                    | Is the eval deterministic and refactor-safe?                       | Yes, four re-runs gave identical numbers                                                                 | Done                      |
+| E6   | Hybrid search v1 (dense + BM25, RRF)                      | Does adding exact-word search help?                                | No: MRR 0.818 to 0.815, paraphrases much worse                                                           | Done, not adopted         |
+| E7   | Weighted RRF (sparse weight 0 to 1)                       | Does a smaller keyword vote fix the paraphrase drop?               | Paraphrase drop shrinks as the weight falls; best MRR +0.02 (later shown to be noise, see E8)            | Done, not adopted         |
+| E8   | Eval set v3 (45 new questions) and a held-out check of E7 | Does the weight chosen in E7 still help on questions it never saw? | No: MRR 0.801 (dense) against 0.779 (weight 0.3), and worse with more weight                             | Done, new baseline saved  |
+| E9   | Reranker (cross-encoder on the top 20)                    | Does reading question and chunk together fix the order?            | minilm: worse on both sets. bge-m3: MRR 0.801 to 0.888 on held-out, flat on old set                      | Done, bge-m3 promising    |
+| E10  | Answer-level check of the reranker                        | Does the reranker change refusals or answers, not just ranks?      | No change on 8 unanswerable and 15 answerable questions; only 23 of 86 could be run (quota)              | Done in part, quota-bound |
+| E11  | Query expansion (hyde, hyde+q, multi)                     | Does letting an LLM rewrite the question before searching help?    | No: MRR 0.809 to 0.755 / 0.793 / 0.803. Better on the old 37 questions, worse on the new 41 (again)      | Done, not adopted         |
+| E12  | Chunk size (500, 1000, 2000 characters)                   | Is 1000/200 a good size?                                           | At the same amount of text, 1000/200 is best. 2000/400 has the best MRR (0.860) but sends twice the text | Done, 1000/200 kept       |
+| E13+ | Stemming, ...                                             | See "Planned"                                                      |                                                                                                          | Not run yet               |
 
 The app still uses **dense search with no reranker** (`SEARCH_STRATEGY` defaults to `dense`, `RERANKER` to `none`). The bge-m3 reranker (E9) is the first thing that looks better, but it costs about 4 seconds a question and I have not measured answer quality, so it is opt-in for now.
 
@@ -341,23 +342,65 @@ Runs are in `server/eval/results/expansion-*.json`. Counts per type: 37 fact, 16
   - **No margin.** Expanded search keeps the top 12 without the 0.12 cosine margin, like hybrid and reranked search. Retrieval metrics at 1, 3, 5 and 10 do not depend on it.
   - **Small sample.** Differences of 0.01 to 0.02 MRR are one question or less.
 
+## E12. Chunk size: 500, 1000 or 2000 characters
+
+- **Why:** 1000 characters with 200 overlap was a first guess and I never tested it. Small chunks should pinpoint the exact sentence but lose the context around it. Big chunks keep the context, but one vector has to describe more topics.
+- **What I did:** cut the same 12 transcripts three ways (500/100, 1000/200, 2000/400, so the overlap is 20% each time), one Qdrant collection per variant, the same Gemini embeddings, dense search, no reranker, no expansion (`--reranker none`). The transcripts are saved to `eval/cache/transcripts/` after the first download, so every variant is cut from identical text. I checked that the saved text gives the same chunk counts as the existing collection (372 chunks on the 12 videos, per video). New: `npm run ingest:eval -- --chunking 500/100`, and `--chunking` on the eval.
+- **Two things I had to fix in the eval first:**
+  - **Labels moved with the chunking.** The time span of a labelled quote is estimated from where it sits inside a chunk, so a different cut gives a different estimate, and each variant would have been graded against slightly different labels. The spans now always come from the default 1000/200 collection. For the default run this changes nothing (re-run: MRR 0.809, the same as before).
+  - **"Top 12" is not the same amount of text.** Twelve chunks of 2000 characters is twice as much as twelve of 1000, and a bigger chunk covers more of the video, so it is easier to hit. A rank-based score favours it for that reason alone. So the eval has `--budget 10000`: how often is the evidence inside the first 10,000 characters of results, whatever the chunk size? (10,000 is about what the app sends now.) It is a second search, so the other numbers are the same with or without it (checked).
+- **Cost:** every chunk is one Gemini embedding request: 187 (2000/400), 372 (1000/200), 745 (500/100). The ingest used 932 of the 1000 free requests a day. The 86 question embeddings were already cached.
+
+All 78 answerable questions, dense search:
+
+|                                             | 500/100 | 1000/200 (current) | 2000/400 |
+| ------------------------------------------- | ------- | ------------------ | -------- |
+| Chunks in the 12 videos                     | 745     | 372                | 187      |
+| MRR, all 78                                 | 0.746   | 0.809              | 0.860    |
+| MRR, old 37 (q01-q41)                       | 0.801   | 0.818              | 0.888    |
+| MRR, new 41 (q42-q86)                       | 0.697   | 0.801              | 0.835    |
+| Hit rate at 1                               | 63%     | 69%                | 78%      |
+| Hit rate at 3                               | 87%     | 91%                | 92%      |
+| Hit rate at 5                               | 91%     | 97%                | 97%      |
+| Hit rate at 10                              | 96%     | 100%               | 99%      |
+| Characters the model receives (average)     | 5,333   | 10,362             | 19,518   |
+| Evidence inside what it receives            | 95%     | 98%                | 97%      |
+| **Same text: first 10,000 characters, hit** | 99%     | **100%**           | 97%      |
+| **Same text: evidence recall**              | 97%     | **98%**            | 94%      |
+| Chunks that fit in 10,000 characters        | 20.0    | 10.0               | 5.0      |
+
+MRR by question type (500/100, 1000/200, 2000/400): fact (37) 0.885, 0.931, 0.921; list (7) 0.762, 0.821, 0.905; overview (9) 0.332, 0.528, 0.800; paraphrase (16) 0.653, 0.772, 0.781; multi-video (9) 0.744, 0.643, 0.778. Runs: [1000/200](../server/eval/results/chunking-1000-200.json), [2000/400](../server/eval/results/chunking-2000-400.json), [500/100](../server/eval/results/chunking-500-100.json).
+
+- **What I read from it:**
+  - **500/100 is worse at ranking, on both sets** (MRR 0.801 and 0.697 against 0.818 and 0.801). Overview questions fall most (0.528 to 0.332): there is no single small chunk that matches "what is this video about". Same direction on two sets, so I believe it. At the same text budget it is level with 1000/200 (99% against 100% is one question), but it needs 20 chunks to get there.
+  - **2000/400 has the best MRR on both sets**, but the gain on the new questions (+0.034) is half the gain on the old ones (+0.070), the same shape as E8 and E11. It is strongest on overview (0.528 to 0.800), list and multi-video questions, which are the ones that need a wide passage.
+  - **The gain is mostly more text, not better finding.** With the same 10,000 characters, 1000/200 has the evidence in the results for 100% of the questions and 98% of the passages, and 2000/400 for 97% and 94%. That is two questions on hit rate and four points on evidence recall: small, and I would not call it proven, but no variant beats 1000/200 at equal text.
+  - **2000/400 costs more to answer with.** The model reads about 19,500 characters per question instead of about 10,400. By my rough estimate (4 characters a token) that is about 1.7 times the prompt tokens, so the 200,000 tokens a day on Groq's free tier would give roughly 35 answers a day instead of 50.
+- **Conclusion:** keep 1000/200. Neither size is better at the same amount of text, and 500/100 ranks worse.
+- **What I cannot conclude:**
+  - **Answer quality was not measured.** The 2000/400 gain on overview questions is a rank gain. A model that reads bigger passages might answer overview questions better, and I did not test it.
+  - **Three sizes, one budget.** Sizes such as 750 or 1500, and an overlap other than 20%, were not tried. Only 10,000 characters was checked as a budget, and only hit rate and evidence recall (the budget check has no rank).
+  - **Dense search only.** The reranker and hybrid search were off, and a reranker that reads 2000 characters per chunk might behave differently.
+  - **Overview has 9 questions, multi-video 9, list 7.** A type-level gap of 0.2 is a few questions.
+- **Next on chunking:** parent-child (search over small chunks, then send the larger text around the match), which tries to get the context of 2000/400 with the pinpointing of 500/100, and 60-second time windows.
+
 ## Planned (not run yet)
 
 Each is a small change judged on the same eval. Add a result below when it is run.
 
-| Idea                                                | What it tests                                                                                                                                                          |
-| --------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Fewer sparse candidates (5 to 10)                   | Does less noise in the sparse list help?                                                                                                                               |
-| Fix Hindi (Devanagari) vowel marks in the tokenizer | Strip accents only from Latin letters, keep the marks of other scripts; rebuild the sparse vectors (found in E8)                                                       |
-| Stemming in the tokenizer                           | "customer"/"customers", "pay"/"paid" match, so the sparse list gets better                                                                                             |
-| Reranker follow-ups                                 | Candidates 10 or 30 instead of 20; hybrid plus bge-m3; bge-m3 at full precision; a cut-off so the tail is not lost                                                     |
-| Finish the answer-level check (E10)                 | The other 63 answerable questions, dense against bge-m3; needs about 3 days of free Groq or a paid tier                                                                |
-| Expansion with video context                        | Give the expansion model the video titles or a summary, so it stops inventing the wrong topic (found in E11); embed the passage as a document; expansion plus reranker |
-| Chunking variants                                   | Sentence-aware, time-window, different sizes, parent-child; needs a collection per strategy                                                                            |
-| 768 against 3072 dimensions                         | Does the smaller embedding lose quality?                                                                                                                               |
-| Correcting misheard terms                           | Does fixing "superbase" to "Supabase" in the transcript help?                                                                                                          |
-| Margin and top-k tuning                             | Tune 12 and 0.12 on the eval instead of one question                                                                                                                   |
-| "No answer" detection                               | LLM check on the retrieved chunks, or the gap between the first and second score                                                                                       |
+| Idea                                                | What it tests                                                                                                                                                              |
+| --------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Fewer sparse candidates (5 to 10)                   | Does less noise in the sparse list help?                                                                                                                                   |
+| Fix Hindi (Devanagari) vowel marks in the tokenizer | Strip accents only from Latin letters, keep the marks of other scripts; rebuild the sparse vectors (found in E8)                                                           |
+| Stemming in the tokenizer                           | "customer"/"customers", "pay"/"paid" match, so the sparse list gets better                                                                                                 |
+| Reranker follow-ups                                 | Candidates 10 or 30 instead of 20; hybrid plus bge-m3; bge-m3 at full precision; a cut-off so the tail is not lost                                                         |
+| Finish the answer-level check (E10)                 | The other 63 answerable questions, dense against bge-m3; needs about 3 days of free Groq or a paid tier                                                                    |
+| Expansion with video context                        | Give the expansion model the video titles or a summary, so it stops inventing the wrong topic (found in E11); embed the passage as a document; expansion plus reranker     |
+| More chunking variants                              | Parent-child (search small, send the larger text around it), 60-second time windows, sentence-aware; sizes are done (E12). Each needs a collection (`npm run ingest:eval`) |
+| 768 against 3072 dimensions                         | Does the smaller embedding lose quality?                                                                                                                                   |
+| Correcting misheard terms                           | Does fixing "superbase" to "Supabase" in the transcript help?                                                                                                              |
+| Margin and top-k tuning                             | Tune 12 and 0.12 on the eval instead of one question                                                                                                                       |
+| "No answer" detection                               | LLM check on the retrieved chunks, or the gap between the first and second score                                                                                           |
 
 ## Other measurements (not retrieval experiments)
 
@@ -392,6 +435,8 @@ Each is a small change judged on the same eval. Add a result below when it is ru
 - _What is query expansion, and did it help?_ An LLM writes extra search texts from the question: an invented answer passage (HyDE) or reworded queries, and the result lists are merged. I tried three modes. None beat plain dense search (best 0.803 against 0.809 MRR). HyDE was worst because the model has never seen the video and invents the wrong topic.
 - _What did E11 teach you about evaluation?_ The same thing as E8. All three modes looked better on the 37 questions I had been looking at and worse on the 41 new ones. Checking on a second set stopped me from shipping an LLM call that makes search worse.
 - _What would you do differently?_ A bigger question set written by someone who has not read the videos. Now one question is 1.3 points, which is better, but a change of one or two questions is still noise, so only consistent moves across several metrics and across two sets mean something.
+- _Did you ever test your chunk size?_ Yes (E12): 500, 1000 and 2000 characters. Bigger chunks ranked better (MRR 0.746, 0.809, 0.860), but a 2000-character chunk is twice the text, so I added a check that gives each variant the same 10,000 characters. On that, 1000 was best (evidence found for 100% of questions against 99% and 97%). So the gain was mostly extra text, and I kept 1000. I did not measure answer quality, and bigger chunks might help overview questions.
+- _Why does a rank-based score favour big chunks?_ A chunk that covers more of the video is more likely to overlap the labelled quote, and it holds more text. So a fair comparison counts characters, not chunks.
 - _Is your eval deterministic?_ Yes. Identical numbers across four re-runs (E5). The noise that is left is the question set size.
 - _Why did you build the eval yourself and not use Ragas, DeepEval or LangSmith?_ Ragas and DeepEval are Python, and LangSmith is hosted and would send data out. The stack is TypeScript and free tiers, and the retrieval metrics are simple to write and to explain.
 - _Why store a sparse vector in Qdrant instead of searching in memory?_ Qdrant filters by video and applies IDF itself, and it keeps the dense and sparse vectors together on each point.
@@ -399,23 +444,24 @@ Each is a small change judged on the same eval. Add a result below when it is ru
 
 **Numbers worth remembering**
 
-| What                                    | Number                                                            |
-| --------------------------------------- | ----------------------------------------------------------------- |
-| Eval set                                | 86 questions, 78 answerable, 12 videos                            |
-| Baseline (dense)                        | MRR 0.809, hit rate 69% at 1, 91% at 3                            |
-| Hit rate at top 5                       | 97% (100% at top 10, too flat to compare on)                      |
-| Weakest question type                   | Overview, MRR 0.528 (multi-video 0.643)                           |
-| One question is worth                   | 1.3 points of hit rate                                            |
-| Hybrid v1 (equal weights)               | MRR 0.815, paraphrase MRR 0.857 to 0.671                          |
-| Weighted RRF (weight 0.3)               | Old set +0.021 MRR, new set -0.022: not real                      |
-| Reranker minilm / bge-m3                | MRR 0.776 / 0.854 (dense 0.809); about 0.25 s / 3.9 s a question  |
-| bge-m3 on held-out questions            | MRR 0.801 to 0.888, hit@1 68% to 85%                              |
-| Answer check (Groq, bge-m3 vs none)     | Unanswerable 7 of 8 refused both; 15 answerable 15/15 both        |
-| Groq free answer quota                  | 200,000 tokens a day, about 50 answers                            |
-| Query expansion (hyde / hyde+q / multi) | MRR 0.755 / 0.793 / 0.803 (dense 0.809); old set up, new set down |
-| Chunks                                  | 375 in total, about 1000 characters                               |
-| BM25 / RRF constants                    | k1 1.2, b 0.75, RRF k 60                                          |
-| Gemini against Groq, same prompt        | 193 s against 0.96 s                                              |
+| What                                    | Number                                                                                                         |
+| --------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| Eval set                                | 86 questions, 78 answerable, 12 videos                                                                         |
+| Baseline (dense)                        | MRR 0.809, hit rate 69% at 1, 91% at 3                                                                         |
+| Hit rate at top 5                       | 97% (100% at top 10, too flat to compare on)                                                                   |
+| Weakest question type                   | Overview, MRR 0.528 (multi-video 0.643)                                                                        |
+| One question is worth                   | 1.3 points of hit rate                                                                                         |
+| Hybrid v1 (equal weights)               | MRR 0.815, paraphrase MRR 0.857 to 0.671                                                                       |
+| Weighted RRF (weight 0.3)               | Old set +0.021 MRR, new set -0.022: not real                                                                   |
+| Reranker minilm / bge-m3                | MRR 0.776 / 0.854 (dense 0.809); about 0.25 s / 3.9 s a question                                               |
+| bge-m3 on held-out questions            | MRR 0.801 to 0.888, hit@1 68% to 85%                                                                           |
+| Answer check (Groq, bge-m3 vs none)     | Unanswerable 7 of 8 refused both; 15 answerable 15/15 both                                                     |
+| Groq free answer quota                  | 200,000 tokens a day, about 50 answers                                                                         |
+| Query expansion (hyde / hyde+q / multi) | MRR 0.755 / 0.793 / 0.803 (dense 0.809); old set up, new set down                                              |
+| Chunks                                  | 372 on the 12 eval videos at 1000/200 (187 at 2000/400, 745 at 500/100)                                        |
+| Chunk size (500 / 1000 / 2000)          | MRR 0.746 / 0.809 / 0.860, but 5.3k / 10.4k / 19.5k characters sent; same 10k characters: hit 99% / 100% / 97% |
+| BM25 / RRF constants                    | k1 1.2, b 0.75, RRF k 60                                                                                       |
+| Gemini against Groq, same prompt        | 193 s against 0.96 s                                                                                           |
 
 ## How to add an entry
 

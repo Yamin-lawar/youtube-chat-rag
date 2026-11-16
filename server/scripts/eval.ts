@@ -8,14 +8,18 @@
 //   npm run eval --workspace server -- --reranker minilm    re-order the results with a local model (minilm, bge-m3)
 //   npm run eval --workspace server -- --expansion hyde     search with a model-written passage (hyde, hyde+q, multi)
 //   npm run eval --workspace server -- --only q42-q86      score only some questions (ids and ranges)
+//   npm run eval --workspace server -- --chunking 500/100  search another chunking (ingest it first: npm run ingest:eval)
+//   npm run eval --workspace server -- --budget 10000      also score the first 10 000 characters of results (compares chunk sizes fairly)
 //   (or) npx tsx --env-file=../.env scripts/eval.ts
 //
 // Every run is saved in eval/runs/ and compared with eval/baseline.json (use --against <file>
 // to compare with another saved run). Use scripts/eval-review.ts to check the labels.
 import { parseArgs } from 'node:util';
 import { QdrantClient } from '@qdrant/js-client-rest';
+import { createChunker } from '../src/rag/chunking/createChunker.js';
 import { RecursiveChunker } from '../src/rag/chunking/recursiveChunker.js';
 import { config } from '../src/config.js';
+import { takeWithinBudget } from '../src/eval/budget.js';
 import { chunkCoversSpan, findEvidenceSpans } from '../src/eval/evidence.js';
 import {
   CUTOFFS,
@@ -54,6 +58,8 @@ const { values: args } = parseArgs({
     only: { type: 'string' },
     reranker: { type: 'string' },
     expansion: { type: 'string' },
+    chunking: { type: 'string' },
+    budget: { type: 'string' },
   },
 });
 
@@ -72,6 +78,15 @@ if (!EXPANSION_NAMES.includes(expansionName)) {
   console.error(`Unknown expansion "${expansionName}". Use one of: ${EXPANSION_NAMES.join(', ')}`);
   process.exit(1);
 }
+// With --budget 10000 the run also asks: how often is the evidence inside the first 10 000
+// characters of results, whatever the size of the chunks?
+const budgetCharacters = args.budget === undefined ? undefined : Number(args.budget);
+if (budgetCharacters !== undefined && !(budgetCharacters >= 100)) {
+  console.error(`--budget must be a number of characters, 100 or more, got "${args.budget}"`);
+  process.exit(1);
+}
+// Enough results to fill the budget even with the smallest chunks we test.
+const BUDGET_SEARCH_LIMIT = 60;
 const sparseWeight = args['sparse-weight']
   ? Number(args['sparse-weight'])
   : config.HYBRID_SPARSE_WEIGHT;
@@ -97,8 +112,15 @@ if (args.only)
     `Scoring ${questions.length} of ${allQuestions.length} questions (--only ${args.only})`,
   );
 
-const store = new QdrantChunkStore(
-  new QdrantClient({ url: config.QDRANT_URL }),
+// --chunking 500/100 searches the collection made by `npm run ingest:eval -- --chunking 500/100`.
+const chunker = createChunker(args.chunking);
+const qdrant = new QdrantClient({ url: config.QDRANT_URL });
+const store = new QdrantChunkStore(qdrant, `chunks_${chunker.name}`, EMBEDDING_DIMENSIONS);
+// Where the labelled quotes are located in time. Always the default collection, never the variant:
+// the position of a quote inside a chunk is an estimate, and a different cut gives a different
+// estimate. With one fixed set of time spans, every variant is graded against the same answer.
+const labelStore = new QdrantChunkStore(
+  qdrant,
   `chunks_${new RecursiveChunker().name}`,
   EMBEDDING_DIMENSIONS,
 );
@@ -159,8 +181,10 @@ console.log(
 );
 
 const stored: ChunkPayload[] = [];
+const labelChunks: ChunkPayload[] = [];
 for (const youtubeId of new Set(questions.flatMap((q) => q.youtubeIds))) {
   stored.push(...(await store.sampleChunks(youtubeId, 1000)));
+  labelChunks.push(...(await labelStore.sampleChunks(youtubeId, 1000)));
 }
 
 interface Result {
@@ -171,6 +195,10 @@ interface Result {
   /** Share of the correct passages inside the chunks the app really sends to the model. */
   keptRecall: number;
   keptCount: number;
+  /** Characters of transcript in those chunks: what the answer model has to read. */
+  keptChars: number;
+  /** Only with --budget: the evidence in the first N characters of results. */
+  budget?: { chunks: number; recall: number };
   poolSize: number;
 }
 
@@ -193,7 +221,7 @@ for (const question of questions) {
   }
 
   const evidence = question.evidence.map((item) => {
-    const spans = findEvidenceSpans(stored, item);
+    const spans = findEvidenceSpans(labelChunks, item);
     if (spans.length === 0) throw new Error(`${question.id}: quote not found: "${item.quote}"`);
     return spans;
   });
@@ -205,6 +233,18 @@ for (const question of questions) {
 
   const kept = keepNearBest(ranked.slice(0, DEFAULT_TOP_K), search.maxScoreDrop);
 
+  // A second, longer search, so the main numbers above stay the same with or without --budget.
+  let budget: Result['budget'];
+  if (budgetCharacters !== undefined) {
+    const longList = await search.search(
+      question.question,
+      question.youtubeIds,
+      BUDGET_SEARCH_LIMIT,
+    );
+    const inBudget = takeWithinBudget(longList, budgetCharacters);
+    budget = { chunks: inBudget.length, recall: evidenceRecall(inBudget, evidence) };
+  }
+
   answerable.push({
     question,
     score: scoreQuestion(ranked, evidence, relevant),
@@ -212,6 +252,8 @@ for (const question of questions) {
     topScore,
     keptRecall: evidenceRecall(kept, evidence),
     keptCount: kept.length,
+    keptChars: kept.reduce((sum, chunk) => sum + chunk.text.length, 0),
+    ...(budget ? { budget } : {}),
     poolSize: pool.length,
   });
 }
@@ -223,7 +265,7 @@ console.log(
   `\nRetrieval eval: ${answerable.length} answerable questions, ${unanswerableTopScores.length} unanswerable`,
 );
 console.log(
-  `Settings: search ${search.name}${search.name === 'hybrid' ? ` (sparse weight ${sparseWeight})` : ''}${expansionName !== 'none' ? `, expansion ${expansionName}` : ''}${rerankerName !== 'none' ? `, reranker ${rerankerName} on ${RERANK_CANDIDATES} candidates` : ''}, topK ${DEFAULT_TOP_K}, margin ${search.maxScoreDrop}, chunking recursive 1000/200\n`,
+  `Settings: search ${search.name}${search.name === 'hybrid' ? ` (sparse weight ${sparseWeight})` : ''}${expansionName !== 'none' ? `, expansion ${expansionName}` : ''}${rerankerName !== 'none' ? `, reranker ${rerankerName} on ${RERANK_CANDIDATES} candidates` : ''}, topK ${DEFAULT_TOP_K}, margin ${search.maxScoreDrop}, chunking ${chunker.name}\n`,
 );
 
 const atEachK = (pick: (r: Result, k: number) => number) =>
@@ -292,8 +334,19 @@ console.log('\nWhat the model really receives (top-k and margin applied):');
 console.log(
   `  evidence recall ${pct(mean(answerable.map((r) => r.keptRecall)))}, ` +
     `${mean(answerable.map((r) => r.keptCount)).toFixed(1)} chunks kept on average ` +
-    `(of ${mean(answerable.map((r) => r.poolSize)).toFixed(1)} in the selected videos)`,
+    `(of ${mean(answerable.map((r) => r.poolSize)).toFixed(1)} in the selected videos), ` +
+    `${Math.round(mean(answerable.map((r) => r.keptChars))).toLocaleString()} characters`,
 );
+
+if (budgetCharacters !== undefined) {
+  const budgets = answerable.flatMap((r) => (r.budget ? [r.budget] : []));
+  console.log(`\nWithin the first ${budgetCharacters.toLocaleString()} characters of results:`);
+  console.log(
+    `  hit rate ${pct(mean(budgets.map((b) => (b.recall > 0 ? 1 : 0))))}, ` +
+      `evidence recall ${pct(mean(budgets.map((b) => b.recall)))}, ` +
+      `${mean(budgets.map((b) => b.chunks)).toFixed(1)} chunks on average`,
+  );
+}
 
 const missed = answerable.filter((r) => r.score.firstRank !== 1);
 console.log(`\nQuestions where the first correct chunk was not rank 1 (${missed.length}):`);
@@ -315,12 +368,13 @@ const record = buildRunRecord(
   {
     label: args['save-baseline'] ? 'baseline' : (args.label ?? 'run'),
     commit: currentCommit(),
+    ...(budgetCharacters !== undefined ? { budgetCharacters } : {}),
     settings: {
       search: search.name,
       topK: DEFAULT_TOP_K,
       // JSON cannot store Infinity, so "no margin" is saved as null.
       maxScoreDrop: Number.isFinite(search.maxScoreDrop) ? search.maxScoreDrop : null,
-      chunking: new RecursiveChunker().name,
+      chunking: chunker.name,
       ...(search.name === 'hybrid' ? { sparseWeight } : {}),
       ...(expansionName !== 'none' ? { expansion: expansionName } : {}),
       ...(rerankerName !== 'none'
@@ -336,6 +390,8 @@ const record = buildRunRecord(
     topScore: r.topScore,
     keptRecall: r.keptRecall,
     keptCount: r.keptCount,
+    keptChars: r.keptChars,
+    ...(r.budget ? { budget: r.budget } : {}),
   })),
   unanswerableTopScores,
 );

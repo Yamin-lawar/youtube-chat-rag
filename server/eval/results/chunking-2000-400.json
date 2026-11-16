@@ -1,0 +1,532 @@
+{
+  "version": 1,
+  "label": "budget-2000-400",
+  "createdAt": "2026-11-16T06:02:48.748Z",
+  "commit": "f870ccb",
+  "settings": {
+    "search": "dense",
+    "topK": 12,
+    "maxScoreDrop": 0.12,
+    "chunking": "recursive-2000-400"
+  },
+  "answerableCount": 78,
+  "metrics": {
+    "hitRate": {
+      "1": 0.782051282051282,
+      "3": 0.9230769230769231,
+      "5": 0.9743589743589743,
+      "10": 0.9871794871794872
+    },
+    "recall": {
+      "1": 0.7147435897435898,
+      "3": 0.8685897435897436,
+      "5": 0.9391025641025641,
+      "10": 0.967948717948718
+    },
+    "precision": {
+      "1": 0.782051282051282,
+      "3": 0.4145299145299144,
+      "5": 0.27948717948717916,
+      "10": 0.15128205128205105
+    },
+    "ndcg": {
+      "1": 0.782051282051282,
+      "3": 0.8017280945838406,
+      "5": 0.8334922692447736,
+      "10": 0.8533688511314137
+    }
+  },
+  "mrr": 0.8604700854700854,
+  "mrrByType": {
+    "fact": 0.9211711711711711,
+    "list": 0.9047619047619048,
+    "overview": 0.8,
+    "paraphrase": 0.78125,
+    "multi-video": 0.7777777777777778
+  },
+  "kept": {
+    "evidenceRecall": 0.9743589743589743,
+    "chunks": 10,
+    "chars": 19517.910256410258
+  },
+  "budget": {
+    "characters": 10000,
+    "hitRate": 0.9743589743589743,
+    "evidenceRecall": 0.9391025641025641,
+    "chunks": 5.012820512820513
+  },
+  "topScores": {
+    "answerableMin": 0.59520996,
+    "unanswerableMax": 0.6994927
+  },
+  "questions": {
+    "q01": {
+      "question": "What is a neo cloud?",
+      "type": "fact",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q02": {
+      "question": "What does backlog, or RPO, mean?",
+      "type": "fact",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q03": {
+      "question": "What share of CoreWeave's revenue comes from its three biggest customers?",
+      "type": "fact",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q04": {
+      "question": "What are the three questions to ask before looking at the chart of an AI cloud stock?",
+      "type": "list",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q05": {
+      "question": "What are the four risks the video sums up for neo cloud stocks?",
+      "type": "list",
+      "firstRank": 3,
+      "reciprocalRank": 0.3333333333333333
+    },
+    "q06": {
+      "question": "How quickly does an Nvidia H100 chip lose value?",
+      "type": "fact",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q07": {
+      "question": "What is this video about?",
+      "type": "overview",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q08": {
+      "question": "What did Oracle's force majeure notice say?",
+      "type": "fact",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q09": {
+      "question": "How long is the median wait for new power generation to be connected to the US grid?",
+      "type": "fact",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q10": {
+      "question": "How many gas turbines did xAI buy for its Memphis data center?",
+      "type": "fact",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q11": {
+      "question": "How does China's electricity production compare with the US?",
+      "type": "list",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q12": {
+      "question": "How do Chinese AI model prices compare with OpenAI and Anthropic models?",
+      "type": "fact",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q13": {
+      "question": "What tariff does the US put on chips sold to China?",
+      "type": "fact",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q14": {
+      "question": "What is the main argument about the AI bubble in this video?",
+      "type": "overview",
+      "firstRank": 2,
+      "reciprocalRank": 0.5
+    },
+    "q15": {
+      "question": "How much has Nvidia invested directly in neoclouds?",
+      "type": "fact",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q16": {
+      "question": "Why is borrowing against GPUs risky when new chips come out so often?",
+      "type": "paraphrase",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q17": {
+      "question": "How big was CoreWeave's interest expense in the second quarter?",
+      "type": "fact",
+      "firstRank": 2,
+      "reciprocalRank": 0.5
+    },
+    "q18": {
+      "question": "Why might Elon Musk have his own reasons to talk neoclouds down?",
+      "type": "paraphrase",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q19": {
+      "question": "What did Gartner forecast for neo clouds?",
+      "type": "multi-video",
+      "firstRank": 2,
+      "reciprocalRank": 0.5
+    },
+    "q20": {
+      "question": "How did CoreWeave's bond yields change?",
+      "type": "multi-video",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q21": {
+      "question": "What did Elon Musk say about the limits on AI?",
+      "type": "multi-video",
+      "firstRank": 3,
+      "reciprocalRank": 0.3333333333333333
+    },
+    "q22": {
+      "question": "Which companies are the biggest makers of gas turbines?",
+      "type": "multi-video",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q23": {
+      "question": "What goes wrong when the chips used as security lose value?",
+      "type": "paraphrase",
+      "firstRank": 2,
+      "reciprocalRank": 0.5
+    },
+    "q26": {
+      "question": "What did Moody's say about B-rated bonds, according to Howard Marks?",
+      "type": "fact",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q27": {
+      "question": "What return did Howard Marks's distressed debt funds earn?",
+      "type": "fact",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q28": {
+      "question": "What lesson does the story of the tall man who drowned in a stream teach?",
+      "type": "paraphrase",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q29": {
+      "question": "What principles are part of Oaktree's investment philosophy?",
+      "type": "list",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q30": {
+      "question": "What is the main message of Howard Marks's talk?",
+      "type": "overview",
+      "firstRank": 5,
+      "reciprocalRank": 0.2
+    },
+    "q31": {
+      "question": "Are index funds a safe way for an ordinary investor to avoid losing money?",
+      "type": "paraphrase",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q33": {
+      "question": "Why does Andrew Ng say the way most people use AI is bad for learning?",
+      "type": "paraphrase",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q34": {
+      "question": "Which analogy does Andrew Ng use to explain that nobody can perfectly control AI?",
+      "type": "fact",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q35": {
+      "question": "What is happening to software engineering job openings, according to Andrew Ng?",
+      "type": "fact",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q36": {
+      "question": "What advice does Andrew Ng give to college students and fresh graduates?",
+      "type": "list",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q37": {
+      "question": "What does Andrew Ng think about the fear around AI?",
+      "type": "overview",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q38": {
+      "question": "What is the product management bottleneck?",
+      "type": "fact",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q39": {
+      "question": "How far away does Andrew Ng think human-level AI is?",
+      "type": "paraphrase",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q41": {
+      "question": "What do the two speakers say about hype and following the crowd?",
+      "type": "multi-video",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q42": {
+      "question": "What did Stripe build for its engineers?",
+      "type": "fact",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q43": {
+      "question": "Which library does the harness engineering demo use to get the basic agent loop?",
+      "type": "fact",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q44": {
+      "question": "At how many tokens does the summarization step kick in?",
+      "type": "fact",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q45": {
+      "question": "What maximum context length does Opus 4.6 have?",
+      "type": "fact",
+      "firstRank": 2,
+      "reciprocalRank": 0.5
+    },
+    "q46": {
+      "question": "Which tool does the video show for automatically testing a website?",
+      "type": "fact",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q47": {
+      "question": "How do you make the assistant pause for a go-ahead from a person before a risky action?",
+      "type": "paraphrase",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q48": {
+      "question": "Why might the same AI model feel brilliant in one coding tool and useless in another?",
+      "type": "paraphrase",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q49": {
+      "question": "What is the main point of the video about AI agent harnesses?",
+      "type": "overview",
+      "firstRank": 2,
+      "reciprocalRank": 0.5
+    },
+    "q50": {
+      "question": "What is harness engineering and why are companies hiring for it?",
+      "type": "overview",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q51": {
+      "question": "What are the four components of the harness that is built step by step?",
+      "type": "list",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q52": {
+      "question": "What do the two harness videos say about managing the context window?",
+      "type": "multi-video",
+      "firstRank": 6,
+      "reciprocalRank": 0.16666666666666666
+    },
+    "q53": {
+      "question": "Which products does each harness video give as examples of a harness?",
+      "type": "multi-video",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q54": {
+      "question": "How much long-term debt does Apple have in the stock-picking example?",
+      "type": "fact",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q55": {
+      "question": "What does a price to earnings ratio of 20 mean?",
+      "type": "fact",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q56": {
+      "question": "Which app does the beginner investing walkthrough use?",
+      "type": "fact",
+      "firstRank": 4,
+      "reciprocalRank": 0.25
+    },
+    "q57": {
+      "question": "What is the yearly limit for a US Roth IRA mentioned in the beginner video?",
+      "type": "fact",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q58": {
+      "question": "How far below the 50-year mean growth must the market fall before the saved cash is invested?",
+      "type": "fact",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q59": {
+      "question": "Why is it better to invest a bit every month than to wait for the perfect moment?",
+      "type": "paraphrase",
+      "firstRank": 4,
+      "reciprocalRank": 0.25
+    },
+    "q60": {
+      "question": "How can someone invest a tiny amount every day without thinking about it?",
+      "type": "paraphrase",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q61": {
+      "question": "What strategy does the dollar cost averaging video teach?",
+      "type": "overview",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q62": {
+      "question": "What checklist does the stock-picking video give a beginner?",
+      "type": "overview",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q63": {
+      "question": "What do the investing videos say about index funds?",
+      "type": "multi-video",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q64": {
+      "question": "Who says index funds do not remove the risk of losing money?",
+      "type": "multi-video",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q65": {
+      "question": "What reasons does the tutorial give for retrieving only the relevant parts instead of the whole transcript?",
+      "type": "list",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q66": {
+      "question": "How many dimensions does the text embedding large model have in the tutorial?",
+      "type": "fact",
+      "firstRank": 3,
+      "reciprocalRank": 0.3333333333333333
+    },
+    "q67": {
+      "question": "How many recent messages does the tutorial pass as chat history?",
+      "type": "fact",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q68": {
+      "question": "What is the default number of matches the match function returns?",
+      "type": "fact",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q69": {
+      "question": "What do you call it when the answer appears piece by piece instead of all at once?",
+      "type": "paraphrase",
+      "firstRank": null,
+      "reciprocalRank": 0
+    },
+    "q70": {
+      "question": "How can the search understand that director, boss and CEO mean the same idea?",
+      "type": "paraphrase",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q71": {
+      "question": "What everyday comparison does the tutorial use for the retrieval step?",
+      "type": "paraphrase",
+      "firstRank": 2,
+      "reciprocalRank": 0.5
+    },
+    "q72": {
+      "question": "Why does the tutorial turn off row level security, and what should you do in production?",
+      "type": "fact",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q73": {
+      "question": "What does the tutorial build?",
+      "type": "overview",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q74": {
+      "question": "How much did Meta invest in Scale AI in June 2025?",
+      "type": "fact",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q75": {
+      "question": "Why did Meta's open-source plan fail?",
+      "type": "fact",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q76": {
+      "question": "What tennis comparison does Howard Marks use for investing styles?",
+      "type": "fact",
+      "firstRank": 2,
+      "reciprocalRank": 0.5
+    },
+    "q77": {
+      "question": "Which famous warning says that being sure of something false is more dangerous than not knowing?",
+      "type": "paraphrase",
+      "firstRank": 4,
+      "reciprocalRank": 0.25
+    },
+    "q78": {
+      "question": "What yearly return did Oaktree make buying distressed debt?",
+      "type": "fact",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q79": {
+      "question": "How many pages are in the free PDF of Howard Marks's memos?",
+      "type": "fact",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q80": {
+      "question": "What does Andrew Ng say about the way most people use AI to learn?",
+      "type": "fact",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q81": {
+      "question": "How does Andrew Ng compare keeping AI under control to something people already trust with their lives?",
+      "type": "paraphrase",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    },
+    "q82": {
+      "question": "Why does Andrew Ng say AGI could already have been reached?",
+      "type": "fact",
+      "firstRank": 1,
+      "reciprocalRank": 1
+    }
+  }
+}

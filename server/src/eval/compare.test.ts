@@ -27,6 +27,7 @@ const question = (id: string, firstRank: number | null): ScoredQuestion => ({
   topScore: 0.7,
   keptRecall: 1,
   keptCount: 8,
+  keptChars: 8000,
 });
 
 const settings = { search: 'dense', topK: 12, maxScoreDrop: 0.12, chunking: 'recursive' };
