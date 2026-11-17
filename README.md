@@ -3,14 +3,28 @@
 Chat with one or more YouTube videos using retrieval-augmented generation (RAG).
 Paste a URL, build a personal library, select up to 5 videos, and hold a continuous conversation grounded in their transcripts.
 
-> Work in progress. Evaluation results and architecture notes will be added as the project grows.
+## Screenshots
+
+![The home page: a video library with a box to paste a YouTube link, and the list of chats](docs/screenshots/home.png)
+
+Pick up to 5 videos from your library and ask. Every answer cites the passages it used, with a link to that moment in the video.
+
+![A chat about one video: the answer cites two passages, and the follow-up question is rewritten into a full question before the search](docs/screenshots/chat-follow-up.png)
+
+A follow-up such as "which companies provide this services" is rewritten into a standalone question using the chat history (shown as "Searched for") so the search still knows the topic.
+
+![A chat across three videos: a structured answer with numbered citations](docs/screenshots/chat-three-videos.png)
+
+## How well does it work?
+
+Retrieval is measured, not judged by eye: a fixed set of 86 questions labelled with transcript quotes. Every change (hybrid search, a reranker, query expansion, chunk sizes, parent-child retrieval) is a logged experiment with its numbers, including the ones that did not help. See [docs/EXPERIMENTS.md](docs/EXPERIMENTS.md) and [docs/EVAL.md](docs/EVAL.md).
 
 ## Stack
 
 - **Backend:** Node.js, Express, TypeScript, LangChain
 - **Vector store:** Qdrant
 - **Database:** PostgreSQL with Prisma ORM
-- **LLM and embeddings:** Google Gemini
+- **LLM and embeddings:** Groq (answers) and Google Gemini (embeddings, answer fallback), both on free tiers
 - **Frontend:** React, Vite, Tailwind CSS, Framer Motion, TanStack Query
 
 ## Getting started

@@ -4,8 +4,9 @@ services:
     ports:
       # The host ports can be changed in .env (QDRANT_PORT, QDRANT_GRPC_PORT) if another Qdrant
       # already uses 6333 and 6334. Set QDRANT_URL to match.
-      - '${QDRANT_PORT:-6333}:6333' # REST API + dashboard (http://localhost:6333/dashboard)
-      - '${QDRANT_GRPC_PORT:-6334}:6334' # gRPC
+      # Bound to 127.0.0.1 so they are reachable from this machine only, not from the network.
+      - '127.0.0.1:${QDRANT_PORT:-6333}:6333' # REST API + dashboard (http://localhost:6333/dashboard)
+      - '127.0.0.1:${QDRANT_GRPC_PORT:-6334}:6334' # gRPC
     volumes:
       - qdrant_data:/qdrant/storage
 
@@ -17,7 +18,8 @@ services:
       POSTGRES_DB: ytchat
     ports:
       # The host port can be changed in .env (POSTGRES_PORT) if another Postgres already uses 5432.
-      - '${POSTGRES_PORT:-5432}:5432'
+      # Bound to 127.0.0.1 because the password is the well-known development one (ytchat).
+      - '127.0.0.1:${POSTGRES_PORT:-5432}:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
