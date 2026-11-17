@@ -126,3 +126,7 @@ Qdrant has a dashboard at http://localhost:6333/dashboard (use your `QDRANT_PORT
 ## Project plan
 
 See [PLAN.md](PLAN.md).
+
+## License
+
+[MIT](LICENSE). The videos, thumbnails and transcripts the app reads belong to their creators; this repo only contains code, short quotes used as evaluation labels, and measurements.

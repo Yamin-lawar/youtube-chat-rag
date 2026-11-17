@@ -1,6 +1,7 @@
 {
   "name": "youtube-chat",
   "private": true,
+  "license": "MIT",
   "description": "Chat with YouTube videos using retrieval-augmented generation (RAG).",
   "workspaces": [
     "server",
