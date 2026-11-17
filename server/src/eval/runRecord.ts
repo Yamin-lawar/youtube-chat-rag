@@ -20,6 +20,8 @@ export interface RunSettings {
   /** Null when there is no margin and everything the search returns is kept. */
   maxScoreDrop: number | null;
   chunking: string;
+  /** Only with parent-child retrieval: the chunking of the bigger chunks that are returned. */
+  parent?: string;
   /** Hybrid only: the weight of the exact-word list against the meaning list (1). */
   sparseWeight?: number;
   /** Only when a reranker was used: its name and how many candidates it was given. */

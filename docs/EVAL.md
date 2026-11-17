@@ -131,6 +131,9 @@ npm run eval --workspace server -- --expansion multi --reranker none --label den
 # --budget 10000 also scores the first 10,000 characters of results, so chunk sizes compare at equal text (E12).
 npm run eval --workspace server -- --chunking 500/100 --budget 10000 --reranker none --label chunks-500
 
+# parent-child: search the small chunks of --chunking, return the bigger chunks of --parent (both must be ingested; E13)
+npm run eval --workspace server -- --chunking 500/100 --parent 2000/400 --budget 10000 --reranker none --label parent-child
+
 # score only some questions: ids and ranges in file order (cannot be combined with --save-baseline)
 npm run eval --workspace server -- --only q42-q86 --label new-questions
 

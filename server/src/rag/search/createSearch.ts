@@ -5,13 +5,16 @@ import type { QdrantChunkStore } from '../vectorstore/qdrantChunkStore.js';
 import { DenseSearch } from './denseSearch.js';
 import { ExpandedSearch } from './expandedSearch.js';
 import { HybridSearch } from './hybridSearch.js';
+import { ParentChildSearch } from './parentChildSearch.js';
+import type { ParentResolver } from './parentResolver.js';
 import { RerankedSearch } from './rerankedSearch.js';
 import type { SearchStrategy, SearchStrategyName } from './types.js';
 
 /**
- * Builds the search strategy with the given name. Query expansion wraps it when given, and a
- * reranker goes on top of that. The reranker reads the user's own question, not the expansions.
- * The one place that knows every strategy.
+ * Builds the search strategy with the given name. Parent-child retrieval wraps it when given
+ * (the search then runs over small chunks and returns their bigger parents), query expansion
+ * wraps that, and a reranker goes on top. The reranker reads the user's own question, not the
+ * expansions. The one place that knows every strategy.
  */
 export function createSearch(
   name: SearchStrategyName,
@@ -19,11 +22,13 @@ export function createSearch(
     embedder: Embedder;
     store: QdrantChunkStore;
     sparseWeight?: number;
+    parentOf?: ParentResolver | undefined;
     expansion?: Expansion | undefined;
     reranker?: Reranker | undefined;
   },
 ): SearchStrategy {
-  const base = createBaseSearch(name, deps);
+  const small = createBaseSearch(name, deps);
+  const base = deps.parentOf ? new ParentChildSearch(small, deps.parentOf) : small;
   const search = deps.expansion ? new ExpandedSearch(base, deps.expansion) : base;
   return deps.reranker ? new RerankedSearch(search, deps.reranker) : search;
 }

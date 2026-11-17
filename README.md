@@ -71,6 +71,7 @@ npm run eval --workspace server -- --strategy hybrid --sparse-weight 0.3   # hyb
 npm run eval --workspace server -- --reranker minilm              # re-order results with a local model: minilm or bge-m3
 npm run eval --workspace server -- --expansion multi --reranker none   # LLM-written extra search texts: hyde, hyde+q or multi
 npm run eval --workspace server -- --chunking 500/100 --budget 10000   # another chunk size (ingest it first: npm run ingest:eval -- --chunking 500/100)
+npm run eval --workspace server -- --chunking 500/100 --parent 2000/400   # parent-child: search small chunks, return bigger ones
 npm run eval --workspace server -- --only q42-q86                # score only some questions (ids and ranges)
 npm run eval --workspace server -- --save-baseline               # keep this run as the one to beat
 npm run eval --workspace server -- --against eval/runs/<file>.json   # compare with another saved run

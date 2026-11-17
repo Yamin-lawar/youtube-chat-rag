@@ -9,6 +9,7 @@
 //   npm run eval --workspace server -- --expansion hyde     search with a model-written passage (hyde, hyde+q, multi)
 //   npm run eval --workspace server -- --only q42-q86      score only some questions (ids and ranges)
 //   npm run eval --workspace server -- --chunking 500/100  search another chunking (ingest it first: npm run ingest:eval)
+//   npm run eval --workspace server -- --chunking 500/100 --parent 2000/400   parent-child: search small chunks, return the bigger ones
 //   npm run eval --workspace server -- --budget 10000      also score the first 10 000 characters of results (compares chunk sizes fairly)
 //   (or) npx tsx --env-file=../.env scripts/eval.ts
 //
@@ -44,6 +45,7 @@ import { DEFAULT_TOP_K, keepNearBest } from '../src/rag/retrieval/retriever.js';
 import { createReranker } from '../src/rag/rerank/models.js';
 import { RERANKER_NAMES, type RerankerName } from '../src/rag/rerank/names.js';
 import { createSearch } from '../src/rag/search/createSearch.js';
+import { createParentResolver } from '../src/rag/search/parentResolver.js';
 import { RERANK_CANDIDATES } from '../src/rag/search/rerankedSearch.js';
 import { SEARCH_STRATEGIES, type SearchStrategyName } from '../src/rag/search/types.js';
 import { QdrantChunkStore, type ChunkPayload } from '../src/rag/vectorstore/qdrantChunkStore.js';
@@ -60,6 +62,7 @@ const { values: args } = parseArgs({
     expansion: { type: 'string' },
     chunking: { type: 'string' },
     budget: { type: 'string' },
+    parent: { type: 'string' },
   },
 });
 
@@ -135,10 +138,32 @@ const rawExpansion = createQueryExpansion(expansionName, { groqApiKey: config.GR
 const expander = rawExpansion
   ? new CachingQueryExpander(rawExpansion.expander, `${evalDir}cache/query-expansions.json`)
   : undefined;
+// --parent 2000/400: search the small chunks of --chunking, but return the bigger chunks of this
+// size around them (parent-child retrieval). Needs both collections ingested.
+const parentChunker = args.parent === undefined ? undefined : createChunker(args.parent);
+const parentStore = parentChunker
+  ? new QdrantChunkStore(qdrant, `chunks_${parentChunker.name}`, EMBEDDING_DIMENSIONS)
+  : undefined;
+const parentChunks: ChunkPayload[] = [];
+if (parentStore) {
+  for (const youtubeId of new Set(questions.flatMap((q) => q.youtubeIds))) {
+    const chunks = await parentStore.sampleChunks(youtubeId, 1000);
+    if (chunks.length === 0) {
+      console.error(
+        `No parent chunks for ${youtubeId} in chunks_${parentChunker?.name}. ` +
+          `Run: npm run ingest:eval --workspace server -- --chunking ${args.parent}`,
+      );
+      process.exit(1);
+    }
+    parentChunks.push(...chunks);
+  }
+}
+
 const search = createSearch(strategyName, {
   embedder,
   store,
   sparseWeight,
+  parentOf: parentStore && createParentResolver(parentChunks),
   expansion: rawExpansion && expander && { ...rawExpansion, expander },
   reranker: createReranker(rerankerName),
 });
@@ -180,10 +205,12 @@ console.log(
         `(uses ${missing} of the 1000 free Gemini requests a day).`,
 );
 
-const stored: ChunkPayload[] = [];
+// `stored` is the pool the search ranks: the parents when parent-child is on, else the chunks.
+// Best possible precision, nDCG and the random-guess line are all counted against that pool.
+const stored: ChunkPayload[] = parentStore ? parentChunks : [];
 const labelChunks: ChunkPayload[] = [];
 for (const youtubeId of new Set(questions.flatMap((q) => q.youtubeIds))) {
-  stored.push(...(await store.sampleChunks(youtubeId, 1000)));
+  if (!parentStore) stored.push(...(await store.sampleChunks(youtubeId, 1000)));
   labelChunks.push(...(await labelStore.sampleChunks(youtubeId, 1000)));
 }
 
@@ -265,7 +292,7 @@ console.log(
   `\nRetrieval eval: ${answerable.length} answerable questions, ${unanswerableTopScores.length} unanswerable`,
 );
 console.log(
-  `Settings: search ${search.name}${search.name === 'hybrid' ? ` (sparse weight ${sparseWeight})` : ''}${expansionName !== 'none' ? `, expansion ${expansionName}` : ''}${rerankerName !== 'none' ? `, reranker ${rerankerName} on ${RERANK_CANDIDATES} candidates` : ''}, topK ${DEFAULT_TOP_K}, margin ${search.maxScoreDrop}, chunking ${chunker.name}\n`,
+  `Settings: search ${search.name}${search.name === 'hybrid' ? ` (sparse weight ${sparseWeight})` : ''}${expansionName !== 'none' ? `, expansion ${expansionName}` : ''}${rerankerName !== 'none' ? `, reranker ${rerankerName} on ${RERANK_CANDIDATES} candidates` : ''}, topK ${DEFAULT_TOP_K}, margin ${search.maxScoreDrop}, chunking ${chunker.name}${parentChunker ? `, parent ${parentChunker.name}` : ''}\n`,
 );
 
 const atEachK = (pick: (r: Result, k: number) => number) =>
@@ -375,6 +402,7 @@ const record = buildRunRecord(
       // JSON cannot store Infinity, so "no margin" is saved as null.
       maxScoreDrop: Number.isFinite(search.maxScoreDrop) ? search.maxScoreDrop : null,
       chunking: chunker.name,
+      ...(parentChunker ? { parent: parentChunker.name } : {}),
       ...(search.name === 'hybrid' ? { sparseWeight } : {}),
       ...(expansionName !== 'none' ? { expansion: expansionName } : {}),
       ...(rerankerName !== 'none'

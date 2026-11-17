@@ -95,6 +95,7 @@ const OPTIONAL_SETTINGS = new Set<keyof RunSettings>([
   'reranker',
   'rerankCandidates',
   'expansion',
+  'parent',
 ]);
 
 function settingChanges(before: RunSettings, after: RunSettings): string[] {
